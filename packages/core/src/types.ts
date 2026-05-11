@@ -86,7 +86,7 @@ export interface QueueState {
   completed: number;
   failed: number;
   delayed: number;
-  cancelled: number;
+  // cancelled: number;
   total: number;
 }
 

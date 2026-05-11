@@ -14,6 +14,10 @@ export type {
 
 export { QueueError, JobTimeoutError, QueueFullError } from './types';
 
+// Core
+export { TaskQueue } from './queue';
+export { EventEmitter } from './events';
+
 // Utilities
 export { Logger } from './utils/logger';
 export { generateJobId, generateId } from './utils/uid';
