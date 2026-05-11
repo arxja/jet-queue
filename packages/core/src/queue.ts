@@ -235,7 +235,7 @@ export class TaskQueue {
       const job = this.pending[index];
       this.pending.splice(index, 1);
       job.status = 'cancelled';
-      this.events.emit('job:completed', { job, result: null, duration: 0 });
+      // ! this.events.emit('job:completed', { job, result: null, duration: 0 });
       return true;
     }
 

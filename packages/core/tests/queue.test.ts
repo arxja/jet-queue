@@ -231,6 +231,9 @@ describe('TaskQueue', () => {
       
       expect(cancelled).toBe(true);
       expect(queue.getState().pending).toBe(0);
+
+      // release the blocker jobs so the test doesn't leave timers running
+      await queue.shutdown(0);
     });
   });
 });
