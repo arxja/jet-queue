@@ -3,8 +3,8 @@
  * Uses timestamp + random string to prevent collisions
  */
 export function generateJobId(): string {
-  const timestamp = Date.now().toString(36); // Base-36 timestamp (shorter)
-  const random = Math.random().toString(36).substring(2, 8); // 6 random chars
+  const timestamp = Date.now().toString(36);
+  const random = crypto.randomUUID().replace(/-/g, '').substring(0, 8);
   return `job_${timestamp}_${random}`;
 }
 

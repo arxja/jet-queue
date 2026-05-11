@@ -60,7 +60,7 @@ export interface Job<T = unknown> {
   metadata: Record<string, unknown>; // any extra data
 }
 
-export type TaskFunction<T = unknown> = (job: Job) => Promise<unknown>;
+export type TaskFunction<T = unknown, TResult = unknown> = (job: Job<T>) => Promise<TResult>;
 
 export interface JobOptions {
   name?: string;
@@ -86,6 +86,7 @@ export interface QueueState {
   completed: number;
   failed: number;
   delayed: number;
+  cancelled: number;
   total: number;
 }
 
@@ -127,6 +128,7 @@ export class JobTimeoutError extends QueueError {
       `Job ${jobId} timed out after ${timeout}ms`,
       'JOB_TIMEOUT'
     );
+    this.name = 'JobTimeoutError';
   }
 }
 
@@ -136,5 +138,6 @@ export class QueueFullError extends QueueError {
       `Queue is full. Maximum ${maxJobs} jobs allowed.`,
       'QUEUE_FULL'
     );
+    this.name = 'QueueFullError';
   }
 }
