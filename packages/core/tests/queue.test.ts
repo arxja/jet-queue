@@ -71,7 +71,6 @@ describe('TaskQueue', () => {
     });
   });
 
-  // ! failed
   describe('Job States', () => {
     test('should track pending → running → completed', async () => {
       let stateDuringExecution = '';
