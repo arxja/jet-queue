@@ -123,7 +123,7 @@ export interface ProgressReporter {
 export interface ScheduleJobs {
   type: 'once' | 'repeat';
   delay?: number; // ms
-  corn?: string; 
+  cron?: string;
   timezone?: string;
 }
 
