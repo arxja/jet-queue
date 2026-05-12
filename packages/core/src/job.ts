@@ -3,7 +3,6 @@ import type { Job, JobStatus, RetryOptions } from './types';
 /**
  * Internal representation of a job with its task function
  */
-
 export interface InternalJob<T = unknown> extends Job<T> {
   _taskFn: (job: Job<T>) => Promise<unknown>;
   _retryOptions?: RetryOptions;
@@ -14,7 +13,6 @@ export interface InternalJob<T = unknown> extends Job<T> {
 /**
  * Create a new job object with defaults
  */
-
 export function createJob<T = unknown> (
   id: string,
   name: string,
@@ -70,7 +68,6 @@ export function createJob<T = unknown> (
  *   linear:      1000, 2000, 3000, 4000
  *   exponential: 1000, 2000, 4000, 8000
  */
-
 export function calculateRetryDelay(
     attempt: number,
     options: RetryOptions
@@ -111,4 +108,30 @@ export function isJobTimedOut(job: InternalJob): boolean {
  */
 export function jobToString(job: InternalJob): string {
   return `[${job.status.toUpperCase()}] ${job.name} (${job.id}) - attempts: ${job.attempts}/${job.maxAttempts}`;
+}
+
+/**
+ * Create a progress reporter for a job
+ * 
+ * Usage inside a task:
+ *   queue.add(async (job) => {
+ *     const reportProgress = createProgressReporter(job);
+ *     
+ *     for (let i = 0; i < 100; i++) {
+ *       await processChunk();
+ *       reportProgress(i + 1); // "40% done!"
+ *     }
+ *   });
+ */
+export function createProgressReporter(
+  job: InternalJob,
+  onProgress: (job: InternalJob, progress?: number) => void
+): (progress: number) => void {
+  return (progress: number) => {
+    // Clamp between 0-100
+    job.progress = Math.max(0, Math.min(100, Math.round(progress)));
+    
+    // Call the callback if provided
+    onProgress?.(job, job.progress);
+  }
 }
