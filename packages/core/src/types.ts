@@ -114,6 +114,19 @@ export interface EventPayload {
   'queue:resumed': {};
 }
 
+// Progress reporting
+export interface ProgressReporter {
+  (progress: number): void;
+}
+
+// Schedule jobs
+export interface ScheduleJobs {
+  type: 'once' | 'repeat';
+  delay?: number; // ms
+  corn?: string; 
+  timezone?: string;
+}
+
 // Custom errors
 export class QueueError extends Error {
   constructor(message: string, public code: string) {
