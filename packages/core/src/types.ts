@@ -127,6 +127,30 @@ export interface ScheduleJobs {
   timezone?: string;
 }
 
+// Storage adaptor
+export interface StorageAdapter {
+  // Save a new job to storage 
+  saveJob(job: Job): Promise<void>;
+  
+  // Get a job by ID  
+  getJob(jobId: string): Promise<Job | null>;
+  
+  // Update specific fields of a job  
+  updateJob(jobId: string, updates: Partial<Job>): Promise<void>;
+  
+  // Remove a job from storage  
+  deleteJob(jobId: string): Promise<void>;
+  
+  // List jobs, optionally filtered by status  
+  listJobs(status?: JobStatus): Promise<Job[]>;
+  
+  // Remove all jobs (for testing/reset)  
+  clearAll(): Promise<void>;
+  
+  // Close the storage connection gracefully  
+  close(): Promise<void>;
+}
+
 // Custom errors
 export class QueueError extends Error {
   constructor(message: string, public code: string) {
