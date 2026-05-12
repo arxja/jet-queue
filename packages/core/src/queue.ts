@@ -78,7 +78,9 @@ export class TaskQueue {
    */
   add<T = unknown>(
     taskFn: TaskFunction<T>,
-    options: JobOptions = {}
+    options: JobOptions & {
+      onProgress?: (job: Job, progress: number) => void;
+    } = {}
   ): string {
     // Safety checks
     if (this.isShuttingDown) {
@@ -111,6 +113,9 @@ export class TaskQueue {
       }
     );
 
+    // Store the progress callback in the job
+    (job as any)._onProgress = options.onProgress;
+
     // Handle delayed jobs (run later)
     if (job.delay > 0) {
       job.status = 'delayed';
@@ -134,6 +139,62 @@ export class TaskQueue {
 
     return jobId;
   }
+
+    /**
+   * Add a job that runs after a delay
+   * 
+   * Example:
+   *   queue.addDelayed(
+   *     async () => sendReminder(),
+   *     { delay: 3600000 } // Run in 1 hour
+   *   );
+   */
+  addDelayed<T = unknown>(
+    taskFn: TaskFunction<T>,
+    delayMs: number,
+    options: JobOptions = {}
+  ): string {
+    return this.add(taskFn, {
+      ...options,
+      delay: delayMs,
+    });
+  }
+
+    /**
+   * Schedule a repeating job
+   * 
+   * Example:
+   *   queue.addRepeating(
+   *     'cleanup',
+   *     async () => cleanOldData(),
+   *     86400000 // Run every 24 hours
+   *   );
+   */
+  addRepeating<T = unknown>(
+    name: string,
+    taskFn: TaskFunction<T>,
+    intervalMs: number,
+    options: JobOptions = {}
+  ): { stop: () => void } {
+    let stopped = false;
+    const runJob = () => {
+      if (stopped) return;
+      this.add(taskFn, {
+        ...options,
+        name,
+      });
+      // Schedule next run
+      setTimeout(runJob, intervalMs);
+    };
+    // Start the first run
+    setTimeout(runJob, intervalMs);
+    return {
+      stop: () => {
+        stopped = true;
+      },
+    };
+  }
+
 
   /**
    * Pause the queue
@@ -363,12 +424,33 @@ export class TaskQueue {
     job.attempts++;
     this.running.set(job.id, job);
 
+    const reportProgress = (progress: number) => {
+      job.progress = Math.max(0, Math.min(100, Math.round(progress)));
+    
+      // Call user's callback
+      (job as any)._onProgress?.(job, job.progress);
+    
+      // Emit event
+      this.events.emit('job:progress', {
+        job,
+        progress: job.progress,
+      });
+    };
+
+  // wrap the task to inject the progress function
+  const taskWithProgress = () => {
+    return job._taskFn({
+      ...job,
+      reportProgress,  // Available as job.reportProgress(50)
+    } as any);
+  };
+
     this.logger.debug(`Job started: ${job.name} (${job.id})`);
     this.events.emit('job:started', { job });
 
     try {
       // EXECUTE THE TASK (with timeout)
-      const result = await this.executeWithTimeout(job, job._taskFn);
+      const result = await this.executeWithTimeout(job, taskWithProgress);
 
       // SUCCESS
       job.status = 'completed';
