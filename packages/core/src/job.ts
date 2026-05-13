@@ -36,7 +36,7 @@ export function createJob<T = unknown>(
     // Identity
     id,
     name,
-    data: (options.data as T) || ({} as T),
+    data: (options.data ?? {}) as T,
 
     // Lifecycle
     status: "pending",
