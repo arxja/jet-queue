@@ -55,7 +55,7 @@ export class SQLiteStorage implements StorageAdapter {
       completed_at: job.completedAt || null,
       progress: job.progress,
       error: job.error || null,
-      result: job.result ? JSON.stringify(job.result) : null,
+      result: job.result === undefined ? null : JSON.stringify(job.result),
       tags: JSON.stringify(job.tags),
       metadata: JSON.stringify(job.metadata),
     };
@@ -78,7 +78,7 @@ export class SQLiteStorage implements StorageAdapter {
       completedAt: row.completed_at ?? undefined,
       progress: row.progress,
       error: row.error ?? undefined,
-      result: row.result ? JSON.parse(row.result) : undefined,
+      result: row.result === null ? undefined : JSON.parse(row.result),
       tags: JSON.parse(row.tags),
       metadata: JSON.parse(row.metadata),
     };
@@ -130,7 +130,7 @@ export class SQLiteStorage implements StorageAdapter {
   }
 
   async deleteJob(jobId: string): Promise<void> {
-    this.db.run("DELETE FROM jobs WHERE id = $id", [jobId]);
+    this.db.run("DELETE FROM jobs WHERE id = $id", { $id: jobId });
   }
 
   async listJobs(status?: JobStatus): Promise<Job[]> {

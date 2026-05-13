@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { MemoryStorage } from "../src/storage/memory";
 import { SQLiteStorage } from "../src/storage/sqlite";
 import type { Job, StorageAdapter } from "../src/types";
@@ -37,6 +37,10 @@ function runStorageTests(
       storage = await createStorage();
       await storage.clearAll();
     });
+
+    afterEach(async () => {
+      await cleanup(storage);
+    })
 
     // ---- SAVE & RETRIEVE ----
     describe("saveJob and getJob", () => {
@@ -227,11 +231,6 @@ function runStorageTests(
         expect(retrieved!.status).toBe("completed");
       });
     });
-
-    // Cleanup after all tests
-    if (cleanup) {
-      // Note: We call cleanup manually since there's no afterAll per-describe in bun
-    }
   });
 }
 

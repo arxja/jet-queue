@@ -125,8 +125,9 @@ export class TaskQueue {
 
     const job = createJob(
       jobId,
-      mergedOptions.name ||
-        (typeof taskOrHandler === "string" ? taskOrHandler : "anonymous"),
+      typeof taskOrHandler === "string"
+        ? taskOrHandler
+        : mergedOptions.name || "anonymous",
       (taskFn || handlerName)!,
       {
         data: mergedOptions.data as T,
@@ -665,7 +666,7 @@ export class TaskQueue {
     return {
       ...data,
       _taskFn: undefined,
-      _handlerName: data.name, // assume handler name matches job name
+      _handlerName: (data as any).handlerName || data.name,
       _retryOptions: (data as any)?._retryOptions,
     };
   }

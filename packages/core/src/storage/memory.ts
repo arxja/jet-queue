@@ -3,14 +3,18 @@ import type { Job, JobStatus, StorageAdapter } from "../types";
 export class MemoryStorage implements StorageAdapter {
   private jobs: Map<string, Job> = new Map();
 
+  private cloneJob(job: Job): Job {
+    return structuredClone(job);
+  }
+
   async saveJob(job: Job): Promise<void> {
     // Clone to avoid external mutations
-    this.jobs.set(job.id, { ...job });
+    this.jobs.set(job.id, this.cloneJob(job));
   }
 
   async getJob(jobId: string): Promise<Job | null> {
     const job = this.jobs.get(jobId);
-    return job ? { ...job } : null;
+    return job ? this.cloneJob(job) : null;
   }
 
   async updateJob(jobId: string, updates: Partial<Job>): Promise<void> {
@@ -25,7 +29,7 @@ export class MemoryStorage implements StorageAdapter {
   }
 
   async listJobs(status?: JobStatus): Promise<Job[]> {
-    const all = Array.from(this.jobs.values());
+    const all = Array.from(this.jobs.values(), (j) => this.cloneJob(j));
     if (status) {
       return all.filter((j) => j.status === status);
     }
