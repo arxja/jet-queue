@@ -129,6 +129,7 @@ export class TaskQueue {
         (typeof taskOrHandler === "string" ? taskOrHandler : "anonymous"),
       (taskFn || handlerName)!,
       {
+        data: mergedOptions.data as T,
         priority: mergedOptions.priority,
         timeout: mergedOptions.timeout,
         maxAttempts: mergedOptions.maxAttempts,

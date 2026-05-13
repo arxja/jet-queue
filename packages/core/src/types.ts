@@ -65,6 +65,7 @@ export type TaskFunction<T = unknown, TResult = unknown> = (job: Job<T>) => Prom
 export interface JobOptions {
   name?: string;
   priority?: JobPriority;
+  data?: unknown;
   delay?: number;
   timeout?: number;
   maxAttempts?: number;
