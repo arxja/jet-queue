@@ -10,14 +10,18 @@ export type {
   TaskFunction,
   RetryOptions,
   BackoffStrategy,
-} from './types';
+} from "./types";
 
-export { QueueError, JobTimeoutError, QueueFullError } from './types';
+export { QueueError, JobTimeoutError, QueueFullError } from "./types";
 
 // Core
-export { TaskQueue } from './queue';
-export { EventEmitter } from './events';
+export { TaskQueue } from "./queue";
+export { EventEmitter } from "./events";
 
 // Utilities
-export { Logger } from './utils/logger';
-export { generateJobId, generateId } from './utils/uid';
+export { Logger } from "./utils/logger";
+export { generateJobId, generateId } from "./utils/uid";
+
+export { MemoryStorage, SQLiteStorage } from "./storage";
+export type { StorageAdapter } from "./types";
+export { HandlerRegistry } from "./handlers";

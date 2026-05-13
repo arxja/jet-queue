@@ -4,38 +4,42 @@ import type { Job, JobStatus, RetryOptions } from './types';
  * Internal representation of a job with its task function
  */
 export interface InternalJob<T = unknown> extends Job<T> {
-  _taskFn: (job: Job<T>) => Promise<unknown>;
+  _taskFn?: (job: Job<T>) => Promise<unknown>;
   _retryOptions?: RetryOptions;
   _resolve?: (value: unknown) => void;
   _reject?: (error: Error) => void;
+  _handlerName?: string;
+  _onProgress?: (job: Job, progress: number) => void;
 }
 
 /**
  * Create a new job object with defaults
  */
-export function createJob<T = unknown> (
+export function createJob<T = unknown>(
   id: string,
   name: string,
-  taskFn: (job: Job<T>) => Promise<unknown>,
+  taskFnOrHandlerName: ((job: Job<T>) => Promise<unknown>) | string,
   options: {
     data?: T;
-    priority?: 'low' | 'normal' | 'high' | "critical";
+    priority?: "low" | "normal" | "high" | "critical";
     timeout?: number;
     maxAttempts?: number;
     delay?: number;
     retryOptions?: RetryOptions;
     tags?: string[];
     metadata?: Record<string, unknown>;
-  } =  {}
+    onProgress?: (job: Job, progress: number) => void;
+  } = {},
 ): InternalJob<T> {
+  const isFunction = typeof taskFnOrHandlerName === "function";
   return {
     // Identity
     id,
     name,
-    data: options.data as T,
+    data: (options.data as T) || ({} as T),
 
     // Lifecycle
-    status: 'pending',
+    status: "pending",
 
     // Configuration
     priority: options.priority || "normal",
@@ -49,14 +53,16 @@ export function createJob<T = unknown> (
 
     // Timing
     createdAt: Date.now(),
-    
+
     // Organization
     tags: options.tags || [],
     metadata: options.metadata || {},
 
     // Internal (not part of public Job type)
-    _taskFn: taskFn,
+    _taskFn: isFunction ? taskFnOrHandlerName : undefined,
+    _handlerName: !isFunction ? taskFnOrHandlerName : undefined,
     _retryOptions: options.retryOptions,
+    _onProgress: options.onProgress,
   };
 }
 
