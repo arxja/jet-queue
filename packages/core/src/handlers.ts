@@ -5,7 +5,7 @@ export class HandlerRegistry {
 
   register(name: string, fn: TaskFunction): void {
     if (this.handlers.has(name)) {
-      throw new Error(`Handler "${name}" already registered`);
+      throw new Error(`Handler "${name}" is already registered`);
     }
     this.handlers.set(name, fn);
   }
