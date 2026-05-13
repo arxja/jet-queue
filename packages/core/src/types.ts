@@ -136,8 +136,14 @@ export interface StorageAdapter {
   // Get a job by ID  
   getJob(jobId: string): Promise<Job | null>;
   
+export type JobUpdate = Partial<Omit<Job, "id" | "createdAt">>;
+
+export interface StorageAdapter {
+  // Save a new job to storage
+  saveJob(job: Job): Promise<void>;
   // Update specific fields of a job  
-  updateJob(jobId: string, updates: Partial<Job>): Promise<void>;
+  updateJob(jobId: string, updates: JobUpdate): Promise<void>;
+}
   
   // Remove a job from storage  
   deleteJob(jobId: string): Promise<void>;
