@@ -495,7 +495,7 @@ export class TaskQueue {
 
     // wrap the task to inject the progress function
     const taskWithProgress = () => {
-      return job._taskFn({
+      return taskFn({
         ...job,
         reportProgress, // Available as job.reportProgress(50)
       } as any);
