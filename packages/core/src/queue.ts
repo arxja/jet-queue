@@ -341,6 +341,49 @@ export class TaskQueue {
   }
 
   /**
+   * Manually retry a failed job
+   *
+   * Use this when you want to retry a job that exhausted its retries,
+   * or when you fixed the underlying issue and want to re-process.
+   */
+  retry(jobId: string): boolean {
+    // Check if job exists in failed state
+    const job = this.getJob(jobId);
+
+    if (!job || job.status !== "failed") {
+      return false;
+    }
+
+    // Reset job state
+    job.status = "pending";
+    job.attempts = 0;
+    job.error = undefined;
+    job.startedAt = undefined;
+    job.completedAt = undefined;
+    job.progress = 0;
+
+    // Re-add to pending queue
+    this.enqueueByPriority(job as InternalJob);
+
+    // Update storage
+    this.storage
+      .updateJob(jobId, {
+        status: "pending",
+        attempts: 0,
+        error: undefined,
+        startedAt: undefined,
+        completedAt: undefined,
+        progress: 0,
+      })
+      .catch((err) => this.logger.error("Failed to update retried job:", err));
+
+    this.logger.info(`Job ${jobId} manually retried`);
+    this.processNext();
+
+    return true;
+  }
+
+  /**
    * Get current queue statistics
    */
   getState(): QueueState {
