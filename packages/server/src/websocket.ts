@@ -3,6 +3,92 @@ import { getQueue } from "./queue-manager";
 
 const clients = new Set<ServerWebSocket>();
 
+// Message handlers
+const messageHandlers: Record<
+  string,
+  (ws: ServerWebSocket, data: any) => void
+> = {
+  ping: (ws, data) => {
+    ws.send(JSON.stringify({ type: "pong", timestamp: Date.now() }));
+  },
+
+  get_stats: (ws, data) => {
+    try {
+      const queue = getQueue();
+      ws.send(
+        JSON.stringify({
+          type: "stats",
+          data: queue.getState(),
+        }),
+      );
+    } catch (error) {
+      ws.send(
+        JSON.stringify({
+          type: "error",
+          error: "Queue not available",
+        }),
+      );
+    }
+  },
+
+  get_job: (ws, data) => {
+    if (!data.jobId) {
+      ws.send(
+        JSON.stringify({
+          type: "error",
+          error: "jobId is required",
+        }),
+      );
+      return;
+    }
+
+    try {
+      const queue = getQueue();
+      const job = queue.getJob(data.jobId);
+      ws.send(
+        JSON.stringify({
+          type: "job",
+          data: job,
+        }),
+      );
+    } catch (error) {
+      ws.send(
+        JSON.stringify({
+          type: "error",
+          error: "Failed to get job",
+        }),
+      );
+    }
+  },
+
+  subscribe: (ws, data) => {
+    if (data.events && Array.isArray(data.events)) {
+      (ws as any).subscriptions = new Set(data.events);
+      ws.send(
+        JSON.stringify({
+          type: "subscribed",
+          events: data.events,
+        }),
+      );
+    }
+  },
+
+  unsubscribe: (ws, data) => {
+    if (data.events && Array.isArray(data.events)) {
+      const subs = (ws as any).subscriptions;
+      if (subs) {
+        data.events.forEach((event: string) => subs.delete(event));
+        ws.send(
+          JSON.stringify({
+            type: "unsubscribed",
+            events: data.events,
+          }),
+        );
+      }
+    }
+  },
+};
+
 export function setupWebSocket(ws: ServerWebSocket): void {
   clients.add(ws);
   console.log(`[WS] Client connected (total: ${clients.size})`);
@@ -25,18 +111,60 @@ export function setupWebSocket(ws: ServerWebSocket): void {
     );
   }
 
+  // Handle close
   ws.close = () => {
     clients.delete(ws);
     console.log(`[WS] Client disconnected (total: ${clients.size})`);
   };
 }
 
+export function handleWebSocketMessage(
+  ws: ServerWebSocket,
+  message: string | Buffer,
+): void {
+  try {
+    const text = typeof message === "string" ? message : message.toString();
+    const data = JSON.parse(text);
+    const { type } = data;
+
+    if (!type) {
+      throw new Error("Missing message type");
+    }
+
+    const handler = messageHandlers[type];
+    if (handler) {
+      handler(ws, data);
+    } else {
+      ws.send(
+        JSON.stringify({
+          type: "error",
+          error: `Unknown message type: ${type}`,
+        }),
+      );
+    }
+  } catch (error) {
+    ws.send(
+      JSON.stringify({
+        type: "error",
+        error:
+          error instanceof Error ? error.message : "Invalid message format",
+      }),
+    );
+  }
+}
+
 export function broadcast(event: string, data: unknown): void {
   const message = JSON.stringify({ type: event, data, timestamp: Date.now() });
 
   clients.forEach((client) => {
+    // Check if client wants this event (subscription filter)
+    const subscriptions = (client as any).subscriptions;
+    if (subscriptions && !subscriptions.has(event)) {
+      return; // Skip if not subscribed
+    }
+
     if (client.readyState === 1) {
-      // 1 = OPEN
+      // WebSocket.OPEN
       client.send(message);
     }
   });
