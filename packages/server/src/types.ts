@@ -7,6 +7,7 @@ export interface CreateJobRequest {
   maxAttempts?: number;
   retryStrategy?: "fixed" | "linear" | "exponential";
   retryDelay?: number;
+  maxRetryDelay?: number;
   tags?: string[];
 }
 

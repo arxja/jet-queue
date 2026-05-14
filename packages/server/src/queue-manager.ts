@@ -29,8 +29,6 @@ export async function initQueue(
     storage,
   );
 
-  // Register built-in handlers that users can override
-  // These are just placeholders - users should register their own
   queue.registerHandler("default", async (job: Job) => {
     console.log(`[Default Handler] Job ${job.id} executed`);
     return { handled: true };

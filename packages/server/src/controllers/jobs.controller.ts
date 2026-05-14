@@ -26,7 +26,8 @@ export class JobsController {
         retryOptions: body.retryStrategy
           ? {
               strategy: body.retryStrategy,
-              delay: body.retryDelay || 1000,
+              delay: body.retryDelay ?? 1000,
+              ...(body.maxRetryDelay && { maxDelay: body.maxRetryDelay }),
             }
           : undefined,
         tags: body.tags,

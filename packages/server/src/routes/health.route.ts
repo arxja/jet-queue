@@ -19,7 +19,7 @@ health.get("/", (c) => {
     uptime: Math.floor(uptime),
     queues: 1,
     workers: stats.running,
-    version: "0.1.0",
+    version: "1.0.0",
   });
 });
 

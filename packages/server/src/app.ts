@@ -9,7 +9,15 @@ export function createApp(): Hono {
   const app = new Hono();
 
   // Middleware
-  app.use("*", cors());
+  app.use(
+    "*",
+    cors({
+      origin: process.env.ALLOWED_ORIGINS?.split(",") ?? [
+        "http://localhost:3000",
+      ],
+      credentials: true,
+    }),
+  );
   app.use("*", logger());
 
   // Routes

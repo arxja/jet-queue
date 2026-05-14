@@ -45,6 +45,15 @@ const messageHandlers: Record<
     try {
       const queue = getQueue();
       const job = queue.getJob(data.jobId);
+      if (!job) {
+        ws.send(
+          JSON.stringify({
+            type: "error",
+            error: "Job not found",
+          }),
+        );
+        return;
+      }
       ws.send(
         JSON.stringify({
           type: "job",
@@ -110,12 +119,6 @@ export function setupWebSocket(ws: ServerWebSocket): void {
       }),
     );
   }
-
-  // Handle close
-  ws.close = () => {
-    clients.delete(ws);
-    console.log(`[WS] Client disconnected (total: ${clients.size})`);
-  };
 }
 
 export function handleWebSocketMessage(
@@ -170,7 +173,32 @@ export function broadcast(event: string, data: unknown): void {
   });
 }
 
+export function cleanupWebSocket(ws: ServerWebSocket): void {
+  // Remove from clients set
+  const deleted = clients.delete(ws);
+
+  if (deleted) {
+    // Clear any subscriptions
+    if ((ws as any).subscriptions) {
+      delete (ws as any).subscriptions;
+    }
+
+    // Clear connection timestamp
+    if ((ws as any).connectedAt) {
+      delete (ws as any).connectedAt;
+    }
+
+    console.log(`[WS] Client disconnected (total: ${clients.size})`);
+  }
+}
+
+let eventsSetup = false;
 export function setupQueueEvents(): void {
+  if (eventsSetup) {
+    console.log("[WS] Queue events already registered");
+    return;
+  }
+  eventsSetup = true;
   const queue = getQueue();
 
   // Forward all queue events to WebSocket clients

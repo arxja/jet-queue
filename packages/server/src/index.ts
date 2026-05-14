@@ -1,6 +1,6 @@
 import { createApp } from "./app";
 import { initQueue, shutdownQueue } from "./queue-manager";
-import { handleWebSocketMessage, setupQueueEvents, setupWebSocket } from "./websocket";
+import { cleanupWebSocket, handleWebSocketMessage, setupQueueEvents, setupWebSocket } from "./websocket";
 
 const PORT = parseInt(process.env.PORT || "3001");
 const DB_PATH = process.env.DB_PATH || undefined;
@@ -33,6 +33,7 @@ const server = Bun.serve({
       handleWebSocketMessage(ws, message);
     },
     close(ws) {
+      cleanupWebSocket(ws);
       console.log(`[WS] Client disconnected`);
     },
   },
