@@ -48,7 +48,7 @@ export class queueClient {
         },
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as { error?: string; code?: string };
 
       if (!response.ok) {
         throw new QueueError(
