@@ -24,6 +24,10 @@ export class queueClient {
    */
   constructor(options: ClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/$/, "");
+    if (options.retry) {
+      this.maxReconnectAttempts = options.retry.maxRetries;
+      this.maxReconnectAttempts = options.retry.maxRetries;
+    }
   }
 
   // Internal helpers
@@ -122,7 +126,7 @@ export class queueClient {
    *   }
    */
   async getJob(jobId: string): Promise<JobResponse> {
-    return this.request<JobResponse>(`/api/jobs/${jobId}`);
+    return this.request<JobResponse>(`/api/jobs/${encodeURIComponent(jobId)}`);
   }
 
   /**
@@ -136,7 +140,7 @@ export class queueClient {
   async getJobProgress(
     jobId: string,
   ): Promise<{ id: string; status: string; progress: number }> {
-    return this.request(`/api/jobs/${jobId}/progress`);
+    return this.request(`/api/jobs/${encodeURIComponent(jobId)}/progress`);
   }
 
   /**
@@ -147,7 +151,7 @@ export class queueClient {
    *   await client.cancelJob('job_abc123');
    */
   async cancelJob(jobId: string): Promise<{ id: string; status: string }> {
-    return this.request(`/api/jobs/${jobId}`, {
+    return this.request(`/api/jobs/${encodeURIComponent(jobId)}`, {
       method: "DELETE",
     });
   }
@@ -161,7 +165,7 @@ export class queueClient {
   async retryJob(
     jobId: string,
   ): Promise<{ id: string; status: string; message: string }> {
-    return this.request(`/api/jobs/${jobId}/retry`, {
+    return this.request(`/api/jobs/${encodeURIComponent(jobId)}/retry`, {
       method: "POST",
     });
   }
@@ -370,6 +374,6 @@ export class QueueError extends Error {
     public statusCode: number,
   ) {
     super(message);
-    this.name = "job-queue-systemError";
+    this.name = "QueueError";
   }
 }
