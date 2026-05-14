@@ -130,7 +130,7 @@ export class SQLiteStorage implements StorageAdapter {
   }
 
   async deleteJob(jobId: string): Promise<void> {
-    this.db.run("DELETE FROM jobs WHERE id = $id", { $id: jobId });
+    this.db.run("DELETE FROM jobs WHERE id = $id", [jobId]);
   }
 
   async listJobs(status?: JobStatus): Promise<Job[]> {

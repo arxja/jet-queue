@@ -29,7 +29,7 @@ export class TaskQueue {
   private defaultJobOptions: JobOptions;
 
   // State
-  private pending: InternalJob[] = [];
+  private pending: InternalJob<any>[] = [];
   private running: Map<string, InternalJob> = new Map();
   private delayed: Map<string, ReturnType<typeof setTimeout>> = new Map();
 
@@ -389,7 +389,7 @@ export class TaskQueue {
    *
    * find where the new job belongs and insert it there.
    */
-  private enqueueByPriority(job: InternalJob): void {
+  private enqueueByPriority<T>(job: InternalJob<T>): void {
     const insertIndex = this.pending.findIndex(
       (existing) =>
         PRIORITY_ORDER[job.priority] < PRIORITY_ORDER[existing.priority],
@@ -407,7 +407,7 @@ export class TaskQueue {
   /**
    * Schedule a job to run after a delay
    */
-  private scheduleDelayedJob(job: InternalJob): void {
+  private scheduleDelayedJob<T>(job: InternalJob<T>): void {
     const timeout = setTimeout(() => {
       this.delayed.delete(job.id);
 
