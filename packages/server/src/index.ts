@@ -1,6 +1,11 @@
 import { createApp } from "./app";
 import { initQueue, shutdownQueue } from "./queue-manager";
-import { cleanupWebSocket, handleWebSocketMessage, setupQueueEvents, setupWebSocket } from "./websocket";
+import {
+  cleanupWebSocket,
+  handleWebSocketMessage,
+  setupQueueEvents,
+  setupWebSocket,
+} from "./websocket";
 
 const PORT = parseInt(process.env.PORT || "3001");
 const DB_PATH = process.env.DB_PATH || undefined;
@@ -24,7 +29,21 @@ const app = createApp();
 // Start server with WebSocket support
 const server = Bun.serve({
   port: PORT,
-  fetch: app.fetch,
+  fetch(req, server) {
+    const url = new URL(req.url);
+
+    // Check if this is a WebSocket upgrade request
+    if (url.pathname === "/ws") {
+      const upgraded = server.upgrade(req);
+      if (upgraded) {
+        return; // Successfully upgraded to WebSocket
+      }
+      return new Response("WebSocket upgrade failed", { status: 500 });
+    }
+
+    // All other requests go to Hono
+    return app.fetch(req);
+  },
   websocket: {
     open(ws) {
       setupWebSocket(ws);
