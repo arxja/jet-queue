@@ -1,4 +1,4 @@
-export { queueClient, QueueError } from "./client";
+export { JetQueueClient, QueueError } from "./client";
 export type {
   AddJobOptions,
   JobResponse,

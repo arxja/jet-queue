@@ -7,13 +7,13 @@ import { Dashboard } from "./dashboard";
 // Parse command line arguments
 const args = process.argv.slice(2);
 const serverUrl =
-  args[0] || process.env.TASKFORGE_URL || "http://localhost:3001";
+  args[0] || process.env.JETQUEUE_URL || "http://localhost:3001";
 
 console.clear();
 
 console.log(`
 ╔══════════════════════════════════════╗
-║       ⚡ job-queue-system CLI Dashboard      ║
+║       ⚡ JetQueue CLI Dashboard      ║
 ║       Connecting to ${serverUrl}... ║
 ╚══════════════════════════════════════╝
 `);

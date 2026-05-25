@@ -1,6 +1,5 @@
 import type {
   Job,
-  JobPriority,
   JobOptions,
   QueueOptions,
   QueueState,
@@ -21,7 +20,7 @@ import type { StorageAdapter } from "./types";
 import { MemoryStorage } from "./storage/memory";
 import { HandlerRegistry } from "./handlers";
 
-export class TaskQueue {
+export class JetQueue {
   // Configuration
   private concurrency: number;
   private maxQueuedJobs: number;
@@ -413,8 +412,8 @@ export class TaskQueue {
   static async create(
     options: QueueOptions = {},
     storage?: StorageAdapter,
-  ): Promise<TaskQueue> {
-    const queue = new TaskQueue(options, storage);
+  ): Promise<JetQueue> {
+    const queue = new JetQueue(options, storage);
     await queue.loadPendingJobs();
     return queue;
   }

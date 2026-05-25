@@ -1,5 +1,5 @@
 {
-  "name": "@job-queue-system/server",
+  "name": "@jet-queue/server",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
@@ -14,7 +14,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.33.3",
   "dependencies": {
-    "@job-queue-system/core": "workspace:*",
+    "@jet-queue/core": "workspace:*",
     "hono": "^4.12.18"
   },
   "devDependencies": {

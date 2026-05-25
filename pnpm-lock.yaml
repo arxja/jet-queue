@@ -23,7 +23,7 @@ importers:
 
   packages/cli:
     dependencies:
-      '@job-queue-system/client':
+      '@jet-queue/client':
         specifier: workspace:*
         version: link:../client
       blessed:
@@ -78,7 +78,7 @@ importers:
 
   packages/dashboard:
     dependencies:
-      '@job-queue-system/client':
+      '@jet-queue/client':
         specifier: workspace:*
         version: link:../client
       lucide-react:
@@ -124,7 +124,7 @@ importers:
 
   packages/server:
     dependencies:
-      '@job-queue-system/core':
+      '@jet-queue/core':
         specifier: workspace:*
         version: link:../core
       hono:

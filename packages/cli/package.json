@@ -1,16 +1,16 @@
 {
-  "name": "@job-queue-system/cli",
+  "name": "@jet-queue/cli",
   "version": "1.0.0",
   "type": "module",
   "bin": {
-    "job-queue-system": "./dist/index.js"
+    "jet-queue": "./dist/index.js"
   },
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "build": "tsup src/index.ts --format esm --dts --clean"
   },
   "dependencies": {
-    "@job-queue-system/client": "workspace:*",
+    "@jet-queue/client": "workspace:*",
     "blessed": "^0.1.81",
     "ink": "^7.0.3",
     "react": "^19.2.6",

@@ -19,7 +19,7 @@ const RESET = '\x1b[0m';
 export class Logger {
   constructor(
     private minLevel: LogLevel = 'info',
-    private prefix: string = 'TaskForge'
+    private prefix: string = 'JetQueue'
   ) {}
 
   debug(message: string, ...args: unknown[]): void {

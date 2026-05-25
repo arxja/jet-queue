@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Box, Text, useInput } from "ink";
-import { queueClient } from "@job-queue-system/client";
-import type { StatsResponse, JobResponse } from "@job-queue-system/client";
+import { JetQueueClient } from "@jet-queue/client";
+import type { StatsResponse, JobResponse } from "@jet-queue/client";
 
 interface DashboardProps {
   serverUrl: string;
@@ -12,7 +12,7 @@ export function Dashboard({ serverUrl }: DashboardProps) {
   const [recentJobs, setRecentJobs] = useState<JobResponse[]>([]);
   const [connected, setConnected] = useState(false);
   const [uptime, setUptime] = useState(0);
-  const [client] = useState(() => new queueClient({ baseUrl: serverUrl }));
+  const [client] = useState(() => new JetQueueClient({ baseUrl: serverUrl }));
 
   // Connect to server and set up polling + real-time events
   useEffect(() => {
@@ -83,7 +83,7 @@ export function Dashboard({ serverUrl }: DashboardProps) {
   if (!stats) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Text color="yellow">⏳ Connecting to TaskForge server...</Text>
+        <Text color="yellow">⏳ Connecting to JetQueue server...</Text>
         <Text dimColor>{serverUrl}</Text>
       </Box>
     );
@@ -97,7 +97,7 @@ export function Dashboard({ serverUrl }: DashboardProps) {
       {/* Header */}
       <Box flexDirection="column" marginBottom={1}>
         <Text bold color="cyan">
-          ⚡ TaskForge Queue Dashboard
+          ⚡ JetQueue Dashboard
         </Text>
         <Box>
           <Text color={statusColor}>{statusIcon}</Text>

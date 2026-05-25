@@ -1,6 +1,6 @@
 "use client";
 
-import { queueClient } from "@job-queue-system/client";
+import { JetQueueClient } from "@jet-queue/client";
 import { useState, useEffect, useCallback } from "react";
 import { DashboardStats, JobWithDuration } from "@/types/type";
 
@@ -11,11 +11,11 @@ export function useDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentJobs, setRecentJobs] = useState<JobWithDuration[]>([]);
   const [connected, setConnected] = useState(false);
-  const [client, setClient] = useState<queueClient | null>(null);
+  const [client, setClient] = useState<JetQueueClient | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const c = new queueClient({ baseUrl: SERVER_URL });
+    const c = new JetQueueClient({ baseUrl: SERVER_URL });
     setClient(c);
 
     return () => {

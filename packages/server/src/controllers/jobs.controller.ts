@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 import { getQueue } from "../queue-manager";
 import type { CreateJobRequest, JobResponse } from "../types";
-import { QueueError } from "@job-queue-system/core";
+import { QueueError } from "@jet-queue/core";
 
 export class JobsController {
   async createJob(c: Context) {

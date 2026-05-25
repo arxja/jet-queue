@@ -1,13 +1,13 @@
-import { queueClient } from "@job-queue-system/client";
+import { JetQueueClient } from "jet-queue/client";
 
 const SERVER_URL =
   process.env.NEXT_PUBLIC_JETQUEUE_URL || "http://localhost:3001";
 
-let clientInstance: queueClient | null = null;
+let clientInstance: JetQueueClient | null = null;
 
-export function getClient(): queueClient {
+export function getClient(): JetQueueClient {
   if (!clientInstance) {
-    clientInstance = new queueClient({ baseUrl: SERVER_URL });
+    clientInstance = new JetQueueClient({ baseUrl: SERVER_URL });
   }
   return clientInstance;
 }

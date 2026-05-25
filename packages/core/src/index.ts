@@ -15,7 +15,7 @@ export type {
 export { QueueError, JobTimeoutError, QueueFullError } from "./types";
 
 // Core
-export { TaskQueue } from "./queue";
+export { JetQueue } from "./queue";
 export { EventEmitter } from "./events";
 
 // Utilities

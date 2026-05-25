@@ -10,7 +10,7 @@ import {
 const PORT = parseInt(process.env.PORT || "3001");
 const DB_PATH = process.env.DB_PATH || undefined;
 
-console.log("🚀 Starting TaskForge Server...");
+console.log("🚀 Starting JetQueue Server...");
 console.log(`   Port: ${PORT}`);
 console.log(`   DB: ${DB_PATH || "in-memory"}`);
 
@@ -58,7 +58,7 @@ const server = Bun.serve({
   },
 });
 
-console.log(`✅ TaskForge Server running at http://localhost:${PORT}`);
+console.log(`✅ JetQueue Server running at http://localhost:${PORT}`);
 console.log(`   REST API: http://localhost:${PORT}/api`);
 console.log(`   WebSocket: ws://localhost:${PORT}/ws`);
 console.log(`   Health: http://localhost:${PORT}/api/health`);

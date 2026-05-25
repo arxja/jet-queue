@@ -1,10 +1,9 @@
 {
-  "name": "job-queue-system",
+  "name": "jet-queue",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A background job processing system that lets you move heavy work out of your API's request/response cycle.",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "turbo dev"
   },
   "keywords": [],
   "author": "",

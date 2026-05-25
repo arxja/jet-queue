@@ -1,9 +1,9 @@
-import { TaskQueue, SQLiteStorage } from "@job-queue-system/core";
-import type { Job } from "@job-queue-system/core";
+import { JetQueue, SQLiteStorage } from "@jet-queue/core";
+import type { Job } from "@jet-queue/core";
 
-let queue: TaskQueue | null = null;
+let queue: JetQueue | null = null;
 
-export function getQueue(): TaskQueue {
+export function getQueue(): JetQueue {
   if (!queue) {
     throw new Error("Queue not initialized. Call initQueue() first.");
   }
@@ -16,12 +16,12 @@ export async function initQueue(
     dbPath?: string;
     autoStart?: boolean;
   } = {},
-): Promise<TaskQueue> {
+): Promise<JetQueue> {
   const storage = options.dbPath
     ? new SQLiteStorage(options.dbPath)
     : undefined;
 
-  queue = new TaskQueue(
+  queue = new JetQueue(
     {
       concurrency: options.concurrency || 5,
       autoStart: options.autoStart !== false,

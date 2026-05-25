@@ -6,7 +6,7 @@ import type {
   ClientOptions,
 } from "./types";
 
-export class queueClient {
+export class JetQueueClient {
   private baseUrl: string;
   private ws: WebSocket | null = null;
   private listeners: Map<string, Set<(data: any) => void>> = new Map();
@@ -20,7 +20,7 @@ export class queueClient {
    * @param options.baseUrl - server URL
    *
    * Example:
-   *   const client = new queueClient({ baseUrl: 'http://localhost:3001' });
+   *   const client = new JetQueueClient({ baseUrl: 'http://localhost:3001' });
    */
   constructor(options: ClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/$/, "");
@@ -70,7 +70,7 @@ export class queueClient {
 
       // Wrap network errors
       throw new QueueError(
-        `Failed to connect to job-queue-system server at ${this.baseUrl}`,
+        `Failed to connect to jet-queue server at ${this.baseUrl}`,
         "CONNECTION_ERROR",
         0,
       );
@@ -215,7 +215,7 @@ export class queueClient {
     this.ws = new WebSocket(`${wsUrl}/ws`);
 
     this.ws.onopen = () => {
-      console.log("[job-queue-system SDK] Connected to server");
+      console.log("[jet-queue SDK] Connected to server");
       this.reconnectAttempts = 0;
     };
 
@@ -224,18 +224,18 @@ export class queueClient {
         const message = JSON.parse(event.data);
         this.handleMessage(message);
       } catch (error) {
-        console.error("[job-queue-system SDK] Failed to parse message:", error);
+        console.error("[jet-queue SDK] Failed to parse message:", error);
       }
     };
 
     this.ws.onclose = () => {
-      console.log("[job-queue-system SDK] Disconnected");
+      console.log("[jet-queue SDK] Disconnected");
       this.ws = null;
       this.attemptReconnect();
     };
 
     this.ws.onerror = (error) => {
-      console.error("[job-queue-system SDK] WebSocket error:", error);
+      console.error("[jet-queue SDK] WebSocket error:", error);
     };
   }
 
@@ -337,7 +337,7 @@ export class queueClient {
           callback(message.data || message);
         } catch (error) {
           console.error(
-            `[job-queue-system SDK] Error in listener for "${eventType}":`,
+            `[jet-queue SDK] Error in listener for "${eventType}":`,
             error,
           );
         }
@@ -350,7 +350,7 @@ export class queueClient {
    */
   private attemptReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.log("[job-queue-system SDK] Max reconnect attempts reached");
+      console.log("[jet-queue SDK] Max reconnect attempts reached");
       return;
     }
 
@@ -358,7 +358,7 @@ export class queueClient {
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
 
     console.log(
-      `[job-queue-system SDK] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`,
+      `[jet-queue SDK] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`,
     );
 
     setTimeout(() => {

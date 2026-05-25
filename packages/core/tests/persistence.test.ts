@@ -1,11 +1,11 @@
 import { describe, test, expect } from "bun:test";
-import { TaskQueue } from "../src/queue";
+import { JetQueue } from "../src/queue";
 import { SQLiteStorage } from "../src/storage/sqlite";
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 describe("Persistence Integration", () => {
-  describe("TaskQueue with SQLiteStorage", () => {
+  describe("JetQueue with SQLiteStorage", () => {
     test("should persist and reload pending jobs", async () => {
       const storage = new SQLiteStorage();
 
@@ -13,7 +13,7 @@ describe("Persistence Integration", () => {
       const executed: string[] = [];
 
       // Create queue with storage
-      const queue = new TaskQueue({ concurrency: 1, autoStart: true }, storage);
+      const queue = new JetQueue({ concurrency: 1, autoStart: true }, storage);
       queue.registerHandler("test-job", async (job: any) => {
         executed.push(job.data.value);
       });
@@ -32,10 +32,10 @@ describe("Persistence Integration", () => {
       await storage.close();
     });
 
-    test("should load pending jobs on restart via TaskQueue.create", async () => {
+    test("should load pending jobs on restart via JetQueue.create", async () => {
       // Step 1: Create queue, add pending jobs, close
       const storage1 = new SQLiteStorage();
-      const queue1 = new TaskQueue(
+      const queue1 = new JetQueue(
         { concurrency: 1, autoStart: false },
         storage1,
       );
@@ -87,7 +87,7 @@ describe("Persistence Integration", () => {
       });
 
       // Create queue that loads this job
-      const queue = new TaskQueue({ concurrency: 1 }, storage);
+      const queue = new JetQueue({ concurrency: 1 }, storage);
       // We do NOT register 'deprecated-handler'
       queue.registerHandler("new-handler", async () => {});
 
@@ -105,7 +105,7 @@ describe("Persistence Integration", () => {
 
   describe("Handler-based job execution", () => {
     test("should execute jobs via named handlers", async () => {
-      const queue = new TaskQueue({ concurrency: 1 });
+      const queue = new JetQueue({ concurrency: 1 });
       const results: string[] = [];
 
       queue.registerHandler("greet", async (job: any) => {
@@ -126,7 +126,7 @@ describe("Persistence Integration", () => {
     });
 
     test("should throw when adding unregistered handler", () => {
-      const queue = new TaskQueue();
+      const queue = new JetQueue();
 
       expect(() => {
         queue.add("nonexistent-handler");
@@ -134,7 +134,7 @@ describe("Persistence Integration", () => {
     });
 
     test("should support both direct functions and named handlers", async () => {
-      const queue = new TaskQueue({ concurrency: 1 });
+      const queue = new JetQueue({ concurrency: 1 });
       const results: string[] = [];
 
       // Named handler

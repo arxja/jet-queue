@@ -11,7 +11,6 @@ export interface AddJobOptions {
 }
 
 // Res type
-
 export interface JobResponse {
   id: string;
   name: string;
