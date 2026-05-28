@@ -162,7 +162,11 @@ export function broadcast(event: string, data: unknown): void {
   clients.forEach((client) => {
     // Check if client wants this event (subscription filter)
     const subscriptions = (client as any).subscriptions;
-    if (subscriptions && !subscriptions.has(event)) {
+    if (
+      subscriptions &&
+      subscriptions instanceof Set &&
+      !subscriptions.has(event)
+    ) {
       return; // Skip if not subscribed
     }
 
