@@ -162,7 +162,7 @@ if (isBun) {
   const { DatabaseSync } = await import("node:sqlite");
 
   SQLiteStorageClass = class NodeSQLiteStorage implements StorageAdapter {
-    private db: DatabaseSync;
+    private db: InstanceType<typeof DatabaseSync>;
 
     constructor(filename = ":memory:") {
       this.db = new DatabaseSync(filename);
@@ -273,7 +273,7 @@ if (isBun) {
 
     async getJob(jobId: string): Promise<Job | null> {
       const stmt = this.db.prepare("SELECT * FROM jobs WHERE id = ?");
-      const row = stmt.get(jobId);
+      const row = stmt.get(jobId) as any;
       return row ? this.deserialize(row) : null;
     }
 
@@ -291,17 +291,19 @@ if (isBun) {
 
     async listJobs(status?: JobStatus): Promise<Job[]> {
       let stmt;
+      let rows: any[];
+
       if (status) {
         stmt = this.db.prepare(
           "SELECT * FROM jobs WHERE status = ? ORDER BY created_at ASC",
         );
-        const rows = stmt.all(status);
-        return rows.map((row) => this.deserialize(row));
+        rows = stmt.all(status);
       } else {
         stmt = this.db.prepare("SELECT * FROM jobs ORDER BY created_at ASC");
-        const rows = stmt.all();
-        return rows.map((row) => this.deserialize(row));
+        rows = stmt.all();
       }
+
+      return rows.map((row: any) => this.deserialize(row));
     }
 
     async clearAll(): Promise<void> {
@@ -321,5 +323,4 @@ if (isBun) {
   );
 }
 
-// Export the appropriate implementation
 export const SQLiteStorage = SQLiteStorageClass;
