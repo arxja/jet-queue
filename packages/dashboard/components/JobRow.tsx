@@ -1,6 +1,6 @@
 "use client";
 
-import type { JobWithDuration } from "@/types/type";
+import { JobWithDuration } from "@/types/type";
 
 const statusIcons: Record<string, string> = {
   pending: "⏳",
