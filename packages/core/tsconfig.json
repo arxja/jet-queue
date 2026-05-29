@@ -4,6 +4,7 @@
     "outDir": "./dist",
     "types": ["bun"],
     "baseUrl": ".",
+    "rootDir": ".",
     "paths": {
       "@/*": ["./src/*"]
     }

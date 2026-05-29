@@ -1,4 +1,4 @@
-import { JetQueueClient } from "jet-queue/client";
+import { JetQueueClient } from "@jet-queue/client";
 
 const SERVER_URL =
   process.env.NEXT_PUBLIC_JETQUEUE_URL || "http://localhost:3001";
