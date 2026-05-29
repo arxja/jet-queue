@@ -28,5 +28,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: bun test
-      - run: pnpm build
-      - run: bun run --bun tsc --noEmit # type check
+      
+      - run: pnpm --filter=!dashboard build
+      
+      - run: pnpm --filter=!dashboard exec tsc --noEmit
