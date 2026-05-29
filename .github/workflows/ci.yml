@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "pnpm"
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - run: pnpm install --frozen-lockfile
+      - run: bun test
+      - run: pnpm build
+      - run: bun run --bun tsc --noEmit # type check
