@@ -2,7 +2,10 @@
   "name": "jet-queue",
   "version": "1.0.0",
   "description": "A background job processing system that lets you move heavy work out of your API's request/response cycle.",
-  "workspaces": ["packages/*", "examples/*"],
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
   "scripts": {
     "dev": "turbo dev"
   },
@@ -15,5 +18,8 @@
     "tsup": "^8.5.1",
     "turbo": "^2.9.12",
     "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
