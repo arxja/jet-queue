@@ -2,7 +2,7 @@ packages:
   - 'packages/*'
   - 'examples/*'
 allowBuilds:
-  bun: set this to true or false
+  bun: false
   esbuild: true
   sharp: false
   unrs-resolver: false
