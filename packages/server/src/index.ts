@@ -61,9 +61,12 @@ if (import.meta.main) {
 
   console.log(`✅ JetQueue Server running at http://localhost:${PORT}`);
 
-  process.on("SIGINT", async () => {
+  const shutdown = async () => {
     await shutdownQueue();
     server.stop();
     process.exit(0);
-  });
+  };
+
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 }
