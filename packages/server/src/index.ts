@@ -1,79 +1,72 @@
-import { createApp } from "./app";
-import { initQueue, shutdownQueue } from "./queue-manager";
-import {
-  cleanupWebSocket,
-  handleWebSocketMessage,
+// Re-export building blocks for custom servers
+export { createApp } from "./app";
+export { initQueue, shutdownQueue, getQueue } from "./queue-manager";
+export {
   setupQueueEvents,
   setupWebSocket,
+  handleWebSocketMessage,
+  cleanupWebSocket,
 } from "./websocket";
 
-const PORT = parseInt(process.env.PORT || "3001");
-const DB_PATH = process.env.DB_PATH || undefined;
+if (import.meta.main) {
+  const { createApp } = await import("./app");
+  const { initQueue, shutdownQueue } = await import("./queue-manager");
+  const {
+    setupQueueEvents,
+    setupWebSocket,
+    handleWebSocketMessage,
+    cleanupWebSocket,
+  } = await import("./websocket");
 
-console.log("🚀 Starting JetQueue Server...");
-console.log(`   Port: ${PORT}`);
-console.log(`   DB: ${DB_PATH || "in-memory"}`);
+  const PORT = parseInt(process.env.PORT || "3001");
+  const DB_PATH = process.env.DB_PATH || undefined;
 
-// Initialize queue
-await initQueue({
-  dbPath: DB_PATH,
-  concurrency: parseInt(process.env.CONCURRENCY || "5"),
-});
+  console.log("🚀 Starting JetQueue Server...");
+  console.log(`   Port: ${PORT}`);
+  console.log(`   DB: ${DB_PATH || "in-memory"}`);
 
-// Setup WebSocket event forwarding
-setupQueueEvents();
+  await initQueue({
+    dbPath: DB_PATH,
+    concurrency: parseInt(process.env.CONCURRENCY || "5"),
+  });
 
-// Create Hono app
-const app = createApp();
+  setupQueueEvents();
 
-// Start server with WebSocket support
-const server = Bun.serve({
-  port: PORT,
-  fetch(req, server) {
-    const url = new URL(req.url);
+  const app = createApp();
 
-    // Check if this is a WebSocket upgrade request
-    if (url.pathname === "/ws") {
-      const upgraded = server.upgrade(req);
-      if (upgraded) {
-        return; // Successfully upgraded to WebSocket
+  const server = Bun.serve({
+    port: PORT,
+    fetch(req, server) {
+      const url = new URL(req.url);
+      if (url.pathname === "/ws") {
+        const upgraded = server.upgrade(req);
+        if (upgraded) return;
+        return new Response("WebSocket upgrade failed", { status: 500 });
       }
-      return new Response("WebSocket upgrade failed", { status: 500 });
-    }
-
-    // All other requests go to Hono
-    return app.fetch(req);
-  },
-  websocket: {
-    open(ws) {
-      setupWebSocket(ws);
+      return app.fetch(req);
     },
-    message(ws, message) {
-      handleWebSocketMessage(ws, message);
+    websocket: {
+      open(ws) {
+        setupWebSocket(ws);
+      },
+      message(ws, message) {
+        handleWebSocketMessage(ws, message);
+      },
+      close(ws) {
+        cleanupWebSocket(ws);
+        console.log("[WS] Client disconnected");
+      },
     },
-    close(ws) {
-      cleanupWebSocket(ws);
-      console.log(`[WS] Client disconnected`);
-    },
-  },
-});
+  });
 
-console.log(`✅ JetQueue Server running at http://localhost:${PORT}`);
-console.log(`   REST API: http://localhost:${PORT}/api`);
-console.log(`   WebSocket: ws://localhost:${PORT}/ws`);
-console.log(`   Health: http://localhost:${PORT}/api/health`);
+  console.log(`✅ JetQueue Server running at http://localhost:${PORT}`);
 
-// Graceful shutdown
-process.on("SIGINT", async () => {
-  console.log("\n🛑 Shutting down...");
-  await shutdownQueue();
-  server.stop();
-  process.exit(0);
-});
+  const shutdown = async () => {
+    await shutdownQueue();
+    server.stop();
+    process.exit(0);
+  };
 
-process.on("SIGTERM", async () => {
-  console.log("\n🛑 Shutting down...");
-  await shutdownQueue();
-  server.stop();
-  process.exit(0);
-});
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+}
