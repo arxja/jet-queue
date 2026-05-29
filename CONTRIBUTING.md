@@ -41,8 +41,8 @@ This project follows the [Contributor Covenant Code of Conduct](https://www.cont
 ### Prerequisites
 
 - [Bun](https://bun.sh) (latest)
-- [Node.js](https://nodejs.org) 20+ (for testing Node compatibility)
-- [pnpm](https://pnpm.io) 8+
+- [Node.js](https://nodejs.org) 22+ (for testing Node compatibility)
+- [pnpm](https://pnpm.io) 11+
 
 ### Setup
 
