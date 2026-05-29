@@ -4,6 +4,7 @@ import ConnectionBadge from "@/components/ConnectionBadge";
 import JobRow from "@/components/JobRow";
 import StatsCard from "@/components/StatsCard";
 import { useDashboard } from "@/hooks/useDashboard";
+import { JobWithDuration } from "@/types/type";
 
 export default function Home() {
   const { stats, recentJobs, connected, error, refresh } = useDashboard();
@@ -126,7 +127,7 @@ export default function Home() {
                     No jobs processed yet. Add jobs via the SDK or API.
                   </p>
                 ) : (
-                  recentJobs.map((job, i) => (
+                  recentJobs.map((job: any, i: number) => (
                     <JobRow key={`${job.id}-${i}`} job={job} />
                   ))
                 )}

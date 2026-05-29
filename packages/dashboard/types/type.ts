@@ -12,10 +12,10 @@ export interface DashboardStats {
 
 export interface JobWithDuration {
   id: string;
-  name: string;
+  name?: string;
   status: string;
-  priority: string;
-  progress: number;
+  priority?: string;
+  progress?: number;
   error?: string;
   duration?: number; // ms
   createdAt: string;

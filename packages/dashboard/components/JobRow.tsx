@@ -1,6 +1,6 @@
 "use client";
 
-import type { JobWithDuration } from "@/types/type";
+import { JobWithDuration } from "@/types/type";
 
 const statusIcons: Record<string, string> = {
   pending: "⏳",
@@ -35,8 +35,10 @@ const JobRow = ({ job }: { job: JobWithDuration }) => {
       <span className="font-mono text-xs text-gray-400 w-16 truncate">
         {job.id.slice(0, 10)}
       </span>
-      <span className={`flex-1 text-sm ${color}`}>{job.name}</span>
-      {job.status === "running" && job.progress > 0 && (
+      <span className={`flex-1 text-sm ${color}`}>
+        {job.name || job.id.slice(0, 8)}
+      </span>
+      {job.status === "running" && job.progress && job.progress > 0 && (
         <div className="w-24 bg-gray-200 rounded-full h-2">
           <div
             className="bg-blue-500 h-2 rounded-full transition-all"

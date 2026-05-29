@@ -31,9 +31,9 @@ export function useDashboard() {
       if (data.job) {
         const job: JobWithDuration = {
           id: data.job.id,
-          name: data.job.name,
+          name: data.job.name || data.job.id,
           status: data.job.status,
-          priority: data.job.priority,
+          priority: data.job.priority || "normal",
           progress: data.job.progress || 0,
           error: data.job.error,
           duration: data.duration,

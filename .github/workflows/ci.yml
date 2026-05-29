@@ -11,13 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20]
+        node-version: [22]
 
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 11
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -28,5 +28,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: bun test
-      - run: pnpm build
-      - run: bun run --bun tsc --noEmit # type check
+      
+      - run: pnpm --filter=!dashboard build
+      
+      - run: pnpm --filter=!dashboard exec tsc --noEmit

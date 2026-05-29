@@ -74,8 +74,9 @@ describe("JetQueue", () => {
   describe("Job States", () => {
     test("should track pending → running → completed", async () => {
       let stateDuringExecution = "";
-      let resolveBlock1, resolveBlock2;
-      let resolveTrackedJob;
+      let resolveBlock1: (value?: unknown) => void = () => {};
+      let resolveBlock2: (value?: unknown) => void = () => {};
+      let resolveTrackedJob: (value?: unknown) => void = () => {};
 
       const blockPromise1 = new Promise((resolve) => {
         resolveBlock1 = resolve;
