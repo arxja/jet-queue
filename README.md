@@ -180,10 +180,11 @@ const queue = new JetQueue({
 - **SQLite** - Zero-config persistence
 
 ## 📚 Documentation
-<!-- Todo: add exact path to the doc files -->
-- [Core API Reference](./docs/)
-- [Server API Reference](./docs/)
-- [Client SDK Reference](./docs/)
+- [Getting Started](./docs/getting-started.md)
+- [Core API Reference](./docs/core.md)
+- [Server API Reference](./docs/server.md)
+- [Client SDK Reference](./docs/client.md)
+- [Architecture](./docs/architecture.md)
 - [Examples](./examples/)
 
 ## 🤝 Contributing
