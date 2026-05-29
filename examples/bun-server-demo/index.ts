@@ -57,9 +57,7 @@ const server = Bun.serve({
       setupWebSocket(ws);
     },
     message() {}, // not used in demo
-    close(ws) {
-      cleanupWebSocket(ws);
-    },
+    close() {},
   },
 });
 
