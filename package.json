@@ -7,7 +7,10 @@
     "examples/*"
   ],
   "scripts": {
-    "dev": "turbo dev"
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "bun test",
+    "lint": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
