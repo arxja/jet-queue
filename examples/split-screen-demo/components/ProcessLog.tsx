@@ -14,6 +14,7 @@ const typeStyles: Record<string, { icon: string; color: string }> = {
   completed: { icon: "✅", color: "text-green-600" },
   failed: { icon: "❌", color: "text-red-600" },
   retry: { icon: "🔄", color: "text-orange-600" },
+  progress: { icon: "📊", color: "text-purple-600" },
 };
 
 const ProcessLog = ({ logs, onClear }: ProcessLogProps) => {
@@ -21,7 +22,8 @@ const ProcessLog = ({ logs, onClear }: ProcessLogProps) => {
 
   // Auto-scroll to latest log
   useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = logEndRef.current?.parentElement;
+    container?.scrollTo({ top: 0, behavior: "smooth" });
   }, [logs]);
   return (
     <div className="h-full flex flex-col">
