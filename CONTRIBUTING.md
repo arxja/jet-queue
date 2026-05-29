@@ -54,7 +54,7 @@ pnpm install
 
 ### Running Tests
 
-```
+```bash
 bun test
 ```
 
