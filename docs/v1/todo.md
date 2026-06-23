@@ -5,3 +5,4 @@
 - [ ] Update each package.json files
 - [ ] Fix web dashboard build time error
 - [ ] Polish the codebase for the v1
+- [ ] Update deps 
