@@ -4,6 +4,14 @@
 
 ```bash
 npm install @jet-queue/core
+
+# or 
+
+pnpm add @jet-queue/core
+
+# or 
+
+yarn add @jet-queue/core
 ```
 
 ## Your First Queue
@@ -30,6 +38,8 @@ queue.on("queue:drain", () => {
 ```bash
 npx @jet-queue/server --port 3001
 ```
+> [!TIP]
+> you can use whatever package manger you want, here is the npm example
 
 Then connect with the client:
 
