@@ -1,7 +1,32 @@
 {
   "name": "@jet-queue/cli",
-  "version": "1.0.0",
+  "description": "An cli dashboard built for monitoring JetQueue's jobs/queues",
+  "version": "0.0.0",
   "type": "module",
+  "author": {
+    "name": "Arash Jafari",
+    "url": "https://github.com/arxja"
+  },
+  "keywords": [
+    "cli",
+    "monitoring",
+    "async"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arxja/jet-queue.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/arxja/jet-queue/issues"
+  },
+  "homepage": "https://github.com/arxja/jet-queue#readme",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
   "bin": {
     "jet-queue": "./dist/index.js"
   },
@@ -21,5 +46,10 @@
     "@types/react": "^19.2.14",
     "@types/ws": "^8.18.1",
     "typescript": "^6.0.3"
-  }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "sideEffects": false
 }
