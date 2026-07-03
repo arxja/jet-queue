@@ -11,7 +11,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/arxja/jet-queue.git",
-    "directory": "packages/core"
+    "directory": "packages/server"
   },
   "bugs": {
     "url": "https://github.com/arxja/jet-queue/issues"
