@@ -8,4 +8,4 @@
 npm i @jet-queue/core
 ```
 
-**To Learn how JetQueue works and how to use it in you projects check out [here](https://www.github.com/arxja/jet-queue)**
+**To Learn how JetQueue works and how to use it in your projects check out [here](https://www.github.com/arxja/jet-queue)**
