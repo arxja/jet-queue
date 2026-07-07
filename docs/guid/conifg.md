@@ -1,22 +1,25 @@
 # JetQueue - Configuration System
 
-JetQueue’s configuration system is designed to be modular, type‑safe, and developer‑friendly.  
+JetQueue's configuration system is designed to be **modular**, **type‑safe**, and **developer‑friendly**.  
 Each package can register its own configuration schema, allowing intelligent autocomplete and validation while keeping the core lean.
 
 ---
 
 ## Overview
 
-- **Plugin‑based** – Every package (server, dashboard, etc.) contributes its own `ZodObject` schema.
-- **Single source of truth** – Configuration is loaded once via `cosmiconfig` and validated against the combined schema.
-- **Environment variables** – All settings can be overridden with `JETQUEUE_*` or backend‑specific variables (e.g. `DATABASE_URL`).
-- **Type‑safe** – The exported `baseConfigSchema` and helper functions give you full TypeScript inference.
+- **Plugin‑based** – Every package (server, dashboard, etc.) contributes its own `ZodObject` schema via a central registry.
+- **Single source of truth** – Configuration is loaded once via `cosmiconfig` and validated against the combined schema (base + all registered plugins).
+- **Environment variables** – All settings can be overridden with `JETQUEUE_*` or backend‑specific variables (e.g. `DATABASE_URL`). Environment values take precedence over file values.
+- **Type‑safe** – The exported `baseConfigSchema` and helper functions give you full TypeScript inference, and the combined schema adapts to registered plugins.
+- **Deep merging** – Configuration from files and environment variables are deeply merged, so you can override nested properties while preserving others.
+- **Robust validation** – Zod provides detailed error messages, and the loader prints a clear list of issues when validation fails.
 
 ---
 
 ## Configuration File
 
-JetQueue looks for a configuration file in your project root. Supported formats:
+JetQueue looks for a configuration file in your project root using **cosmiconfig**.  
+Supported formats:
 
 - `jetqueue.config.js` / `jetqueue.config.ts`
 - `jetqueue.config.cjs` / `jetqueue.config.mjs`
@@ -24,40 +27,40 @@ JetQueue looks for a configuration file in your project root. Supported formats:
 - `.jetqueuerc.js` / `.jetqueuerc.cjs` / `.jetqueuerc.mjs`
 - `package.json` (under the `"jetqueue"` key)
 
-Example `jetqueue.config.ts`:
+### Example `jetqueue.config.ts`
 
-```typescript
+///ts
 import type { JetQueueConfig } from "@jetqueue/core";
 
 export const config: JetQueueConfig = {
-  queue: {
-    concurrency: 5,
-    maxQueuedJobs: 10000,
-    autoStart: true,
-    defaultJobOptions: {
-      priority: "normal",
-      timeout: 30000,
-      maxAttempts: 3,
-      retryOptions: {
-        strategy: "exponential",
-        delay: 1000,
-        maxDelay: 60000,
-      },
-    },
-  },
-  storage: {
-    type: "postgres",
-    postgres: {
-      host: "localhost",
-      port: 5432,
-      database: "jetqueue",
-      username: "postgres",
-      password: "postgres",
-      pool: { min: 2, max: 10 },
-    },
-  },
+queue: {
+concurrency: 5,
+maxQueuedJobs: 10000,
+autoStart: true,
+defaultJobOptions: {
+priority: "normal",
+timeout: 30000,
+maxAttempts: 3,
+retryOptions: {
+strategy: "exponential",
+delay: 1000,
+maxDelay: 60000,
+},
+},
+},
+storage: {
+type: "postgres",
+postgres: {
+host: "localhost",
+port: 5432,
+database: "jetqueue",
+username: "postgres",
+password: "postgres",
+pool: { min: 2, max: 10 },
+},
+},
 };
-```
+///
 
 If you are using JavaScript, you can omit the type annotation.
 
@@ -148,44 +151,44 @@ Packages can extend the configuration by registering their own `ZodObject` schem
 
 Inside your plugin package, call:
 
-```typescript
+///ts
 import { registerConfigSchema } from "@jetqueue/core";
 import { z } from "zod";
 
 const pluginSchema = z.object({
-  dashboard: z.object({
-    port: z.number().default(3000),
-    auth: z.object({
-      username: z.string(),
-      password: z.string().min(8),
-    }),
-  }),
+dashboard: z.object({
+port: z.number().default(3000),
+auth: z.object({
+username: z.string(),
+password: z.string().min(8),
+}),
+}),
 });
 
 registerConfigSchema("dashboard", pluginSchema);
-```
+///
 
 Now users can include `dashboard` in their configuration:
 
-```typescript
+///ts
 export default {
-  queue: {
-    /* ... */
-  },
-  storage: {
-    /* ... */
-  },
-  dashboard: {
-    port: 8080,
-    auth: {
-      username: "admin",
-      password: "supersecure",
-    },
-  },
+queue: {
+/_ ... _/
+},
+storage: {
+/_ ... _/
+},
+dashboard: {
+port: 8080,
+auth: {
+username: "admin",
+password: "supersecure",
+},
+},
 };
-```
+///
 
-The plugin’s section is automatically validated and typed.
+The plugin’s section is automatically validated and typed. The combined schema is built at runtime by merging the base schema with all registered plugin schemas.
 
 ---
 
@@ -193,24 +196,31 @@ The plugin’s section is automatically validated and typed.
 
 Use the provided `ConfigLoader` (singleton) or the convenience `loadConfig()` function.
 
-```typescript
+///ts
 import { loadConfig } from "@jetqueue/core";
 
 const config = await loadConfig();
 console.log(config.queue.concurrency);
 console.log(config.storage.type);
-```
+///
 
 You can also access specific sections:
 
-```typescript
+///ts
 const loader = ConfigLoader.getInstance();
 await loader.load();
 
 const queue = loader.getQueueConfig();
 const storage = loader.getStorageConfig();
 const dashboard = loader.getPluginConfig("dashboard");
-```
+///
+
+The loader performs the following steps:
+
+1. Searches for a configuration file using `cosmiconfig`.
+2. Merges environment variables (with deep merge) into the file configuration.
+3. Applies the combined Zod schema (base + registered plugins) to validate the final config.
+4. On success, stores the validated config internally and provides accessor methods.
 
 ---
 
@@ -265,13 +275,11 @@ Configuration is validated using Zod. On failure, the loader prints a detailed e
 
 The loader throws a `ZodError` which you can catch and handle as needed.
 
----
-
 ## Custom Runtime Validation (Optional)
 
 Although not part of the core schema, you can perform additional validation after loading:
 
-```typescript
+```ts
 const config = await loadConfig();
 
 if (
@@ -282,7 +290,23 @@ if (
 }
 ```
 
----
+## System Architecture & Testing
+
+The configuration system is built on a few key components:
+
+- **Zod schemas** – Define the shape and constraints of every configuration section.
+- **Registry** – A global map that stores plugin schemas; `getCombinedSchema()` merges them with the base schema.
+- **ConfigLoader** – A singleton that orchestrates file discovery, environment parsing, and validation.
+- **Deep merge utility** – Recursively merges configuration objects from multiple sources.
+
+- The system is **thoroughly tested** with four test suites covering:
+
+- **Schema validation** – Ensures all constraints, defaults, and discriminated unions work as expected.
+- **File loading** – Mocks cosmiconfig to test successful loads and missing files.
+- **Environment variable parsing** – Verifies every possible environment override for queue, job, retry, and storage options.
+- **Plugin registration** – Confirms that plugin schemas are correctly merged, validated, and accessible via getPluginConfig.
+
+This gives high confidence that the configuration system behaves correctly in production.
 
 ## Summary
 
@@ -291,3 +315,4 @@ if (
 - **Flexible sources** – File, environment variables, and defaults.
 - **Plugin‑friendly** – Register schemas and they become part of the validated config.
 - **Developer‑friendly** – Clear error messages and easy debugging.
+- **Battle‑tested** – Comprehensive tests ensure reliability and help prevent regressions
