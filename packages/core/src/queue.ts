@@ -413,7 +413,9 @@ export class JetQueue {
   static async create(storage?: StorageAdapter): Promise<JetQueue> {
     const loader = ConfigLoader.getInstance();
     const config = await loader.load();
-    return new JetQueue(config.queue, storage);
+    const queue = new JetQueue(config.queue, storage);
+    await queue.loadPendingJobs();
+    return queue;
   }
 
   // INTERNAL: JOB MANAGEMENT
