@@ -29,7 +29,7 @@ Supported formats:
 
 ### Example `jetqueue.config.ts`
 
-///ts
+```ts
 import type { JetQueueConfig } from "@jetqueue/core";
 
 export const config: JetQueueConfig = {
@@ -60,7 +60,7 @@ pool: { min: 2, max: 10 },
 },
 },
 };
-///
+```
 
 If you are using JavaScript, you can omit the type annotation.
 
@@ -151,7 +151,7 @@ Packages can extend the configuration by registering their own `ZodObject` schem
 
 Inside your plugin package, call:
 
-///ts
+```ts
 import { registerConfigSchema } from "@jetqueue/core";
 import { z } from "zod";
 
@@ -166,17 +166,17 @@ password: z.string().min(8),
 });
 
 registerConfigSchema("dashboard", pluginSchema);
-///
+```
 
 Now users can include `dashboard` in their configuration:
 
-///ts
+```ts
 export default {
 queue: {
-/_ ... _/
+/* ... */
 },
 storage: {
-/_ ... _/
+/* ... */
 },
 dashboard: {
 port: 8080,
@@ -186,7 +186,7 @@ password: "supersecure",
 },
 },
 };
-///
+```
 
 The plugin’s section is automatically validated and typed. The combined schema is built at runtime by merging the base schema with all registered plugin schemas.
 
@@ -196,24 +196,24 @@ The plugin’s section is automatically validated and typed. The combined schema
 
 Use the provided `ConfigLoader` (singleton) or the convenience `loadConfig()` function.
 
-///ts
+```ts
 import { loadConfig } from "@jetqueue/core";
 
 const config = await loadConfig();
 console.log(config.queue.concurrency);
 console.log(config.storage.type);
-///
+```
 
 You can also access specific sections:
 
-///ts
+```ts
 const loader = ConfigLoader.getInstance();
 await loader.load();
 
 const queue = loader.getQueueConfig();
 const storage = loader.getStorageConfig();
 const dashboard = loader.getPluginConfig("dashboard");
-///
+```
 
 The loader performs the following steps:
 
