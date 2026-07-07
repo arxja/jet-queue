@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "bun:test";
 import { ConfigLoader } from "@/config/loader";
 import { cosmiconfig } from "cosmiconfig";
+import { configRegistry } from "@/config/schema";
 
 vi.mock("cosmiconfig", () => ({
   cosmiconfig: vi.fn(),
@@ -10,6 +11,7 @@ describe("Environment Variables Parsing", () => {
   let originalEnv: NodeJS.ProcessEnv;
 
   beforeEach(() => {
+    configRegistry.clear();
     originalEnv = { ...process.env };
     // Clear only JETQUEUE_* and storage-related env vars
     for (const key of Object.keys(process.env)) {

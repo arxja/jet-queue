@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "bun:test";
 import { ConfigLoader, loadConfig } from "@/config/loader";
 import { cosmiconfig } from "cosmiconfig";
+import { configRegistry } from "@/config/schema";
 
 vi.mock("cosmiconfig", () => ({
   cosmiconfig: vi.fn(),
@@ -8,6 +9,7 @@ vi.mock("cosmiconfig", () => ({
 
 describe("ConfigLoader", () => {
   beforeEach(() => {
+    configRegistry.clear();
     // Reset singleton and mocks
     // @ts-expect-error
     ConfigLoader.instance = undefined;
