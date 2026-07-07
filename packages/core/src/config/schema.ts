@@ -40,8 +40,7 @@ const postgresConfigSchema = z
       })
       .optional(),
     schema: z.string().optional(),
-  })
-  .refine((data) => data.connectionString || (data.host && data.database), {
+  }).refine((data) => data.connectionString || (data.host && data.database), {
     message: "Either connectionString or (host + database) is required",
   });
 
@@ -83,7 +82,11 @@ const storageConfigSchema = z.discriminatedUnion("type", [
 export const baseConfigSchema = z.object({
   queue: z
     .object({
-      concurrency: z.number().int().positive().default(5),
+      concurrency: z
+        .number()
+        .int()
+        .positive("Must be a positive integer")
+        .default(5),
       maxQueuedJobs: z.number().int().positive().default(10000),
       autoStart: z.boolean().default(true),
       defaultJobOptions: jobOptionsSchema,
@@ -113,7 +116,7 @@ export const configRegistry = new Map<string, z.ZodObject<any>>();
 // Register a package's config schema
 export function registerConfigSchema(
   packageName: string,
-  schema: z.ZodObject<any>
+  schema: z.ZodObject<any>,
 ) {
   configRegistry.set(packageName, schema);
 }
@@ -138,7 +141,7 @@ export function getCombinedSchema() {
       ...acc,
       ...getShape(schema),
     }),
-    baseConfigSchema.shape
+    baseConfigSchema.shape,
   );
 
   return z.object(mergedShape);
