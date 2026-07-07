@@ -140,9 +140,8 @@ describe("baseConfigSchema", () => {
       const invalid = {
         storage: { type: "mongodb" },
       };
-      expect(() => baseConfigSchema.parse(invalid)).toThrow(
-        /Invalid discriminator value/,
-      );
+      expect(() => baseConfigSchema.parse(invalid)).toThrow();
+      expect(() => baseConfigSchema.parse(invalid)).toThrow(/Invalid discriminator/);
     });
 
     it("rejects redis without host or connectionString", () => {
@@ -150,12 +149,14 @@ describe("baseConfigSchema", () => {
         storage: {
           type: "redis",
           redis: {
-            port: 6379,
+            port: 6379, // missing host and connectionString
           },
         },
       };
-      // Redis doesn't have a refine, so this should pass (host is optional)
-      expect(() => baseConfigSchema.parse(invalid)).not.toThrow();
+      // New validation requires either connectionString or (host + port)
+      expect(() => baseConfigSchema.parse(invalid)).toThrow(
+        /Either connectionString or \(host \+ port\) is required/,
+      );
     });
   });
 

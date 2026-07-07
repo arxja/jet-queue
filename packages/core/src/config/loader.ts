@@ -37,7 +37,6 @@ export class ConfigLoader {
         "jetqueue.config.mjs",
         "jetqueue.config.ts",
       ],
-      stopDir: process.cwd(),
     });
 
     let result;
@@ -269,6 +268,8 @@ export class ConfigLoader {
     const output = { ...target };
     if (this.isObject(target) && this.isObject(source)) {
       Object.keys(source).forEach((key) => {
+        // Skip undefined values to prevent overwriting target
+        if(source[key] === undefined) return;
         if (this.isObject(source[key])) {
           if (!(key in target)) {
             output[key] = source[key];

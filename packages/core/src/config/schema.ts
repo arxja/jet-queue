@@ -1,30 +1,36 @@
 import { z } from "zod";
 
+// Shared defaults
+const DEFAULT_RETRY_OPTIONS = {
+  strategy: "exponential" as const,
+  delay: 1000,
+  maxDelay: 60000,
+};
+
+const DEFAULT_JOB_OPTIONS = {
+  priority: "normal" as const,
+  timeout: 30000,
+  maxAttempts: 3,
+  retryOptions: DEFAULT_RETRY_OPTIONS,
+};
+
 // Base schema that all packages extend
-const retryOptionsSchema = z.object({
-  strategy: z.enum(["fixed", "linear", "exponential"]).default("exponential"),
-  delay: z.number().positive().default(1000),
-  maxDelay: z.number().positive().optional(),
-});
+const retryOptionsSchema = z
+  .object({
+    strategy: z.enum(["fixed", "linear", "exponential"]).default("exponential"),
+    delay: z.number().positive().default(1000),
+    maxDelay: z.number().positive().optional(),
+  })
+  .default(DEFAULT_RETRY_OPTIONS);
 
 const jobOptionsSchema = z
   .object({
     priority: z.enum(["low", "normal", "high", "critical"]).default("normal"),
     timeout: z.number().positive().default(30000),
     maxAttempts: z.number().int().positive().default(3),
-    retryOptions: retryOptionsSchema.optional(),
+    retryOptions: retryOptionsSchema.default(DEFAULT_RETRY_OPTIONS),
   })
-  .default({
-    priority: "normal",
-    timeout: 30000,
-    maxAttempts: 3,
-    retryOptions: {
-      strategy: "exponential",
-      delay: 1000,
-      maxDelay: 60000,
-    },
-  });
-
+  .default(DEFAULT_JOB_OPTIONS);
 const postgresConfigSchema = z
   .object({
     host: z.string().optional(),
@@ -40,19 +46,24 @@ const postgresConfigSchema = z
       })
       .optional(),
     schema: z.string().optional(),
-  }).refine((data) => data.connectionString || (data.host && data.database), {
+  })
+  .refine((data) => data.connectionString || (data.host && data.database), {
     message: "Either connectionString or (host + database) is required",
   });
 
-const redisConfigSchema = z.object({
-  host: z.string().optional(),
-  port: z.number().int().min(1).max(65535).optional(),
-  password: z.string().optional(),
-  db: z.number().int().min(0).default(0),
-  connectionString: z.string().optional(),
-  prefix: z.string().default("jetqueue:"),
-  maxRetries: z.number().int().min(0).default(3),
-});
+const redisConfigSchema = z
+  .object({
+    host: z.string().optional(),
+    port: z.number().int().min(1).max(65535).optional(),
+    password: z.string().optional(),
+    db: z.number().int().min(0).default(0),
+    connectionString: z.string().optional(),
+    prefix: z.string().default("jetqueue:"),
+    maxRetries: z.number().int().min(0).default(3),
+  })
+  .refine((data) => data.connectionString || (data.host && data.port), {
+    message: "Either connectionString or (host + port) is required",
+  });
 
 const sqliteConfigSchema = z.object({
   filename: z.string().default(":memory:"),
@@ -95,36 +106,36 @@ export const baseConfigSchema = z.object({
       concurrency: 5,
       maxQueuedJobs: 10000,
       autoStart: true,
-      defaultJobOptions: {
-        priority: "normal",
-        timeout: 30000,
-        maxAttempts: 3,
-        retryOptions: {
-          strategy: "exponential",
-          delay: 1000,
-          maxDelay: 60000,
-        },
-      },
+      defaultJobOptions: DEFAULT_JOB_OPTIONS,
     }),
-
   storage: storageConfigSchema,
 });
 
 // Registry for package schemas
-export const configRegistry = new Map<string, z.ZodObject<any>>();
+export const configRegistry = new Map<string, z.ZodTypeAny>();
+
+/** Reset the registry – useful for tests */
+export function clearConfigRegistry() {
+  configRegistry.clear();
+}
 
 // Register a package's config schema
 export function registerConfigSchema(
   packageName: string,
-  schema: z.ZodObject<any>,
+  schema: z.ZodTypeAny,
 ) {
   configRegistry.set(packageName, schema);
 }
 
 // Get combined schema
 function getShape(schema: z.ZodTypeAny): Record<string, z.ZodTypeAny> {
-  if (schema instanceof z.ZodObject) {
-    return schema.shape;
+  if (
+    schema &&
+    typeof schema === "object" &&
+    "shape" in schema &&
+    typeof schema.shape === "object"
+  ) {
+    return schema.shape as Record<string, z.ZodTypeAny>;
   }
   return {};
 }
