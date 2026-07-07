@@ -1,6 +1,6 @@
 {
   "name": "@jet-queue/core",
-  "version": "0.0.2",
+  "version": "0.1.2",
   "description": "High-performance job queue for Bun/Node.js applications",
   "keywords": [
     "queue",
@@ -66,5 +66,9 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "dependencies": {
+    "cosmiconfig": "^9.0.2",
+    "zod": "^4.4.3"
+  }
 }

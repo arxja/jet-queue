@@ -19,6 +19,7 @@ import { type InternalJob, createJob, calculateRetryDelay } from "./job";
 import type { StorageAdapter } from "./types";
 import { MemoryStorage } from "./storage/memory";
 import { HandlerRegistry } from "./handlers";
+import { ConfigLoader } from "./config/loader";
 
 export class JetQueue {
   // Configuration
@@ -409,11 +410,10 @@ export class JetQueue {
     this.handlers.register(name, fn);
   }
 
-  static async create(
-    options: QueueOptions = {},
-    storage?: StorageAdapter,
-  ): Promise<JetQueue> {
-    const queue = new JetQueue(options, storage);
+  static async create(storage?: StorageAdapter): Promise<JetQueue> {
+    const loader = ConfigLoader.getInstance();
+    const config = await loader.load();
+    const queue = new JetQueue(config.queue, storage);
     await queue.loadPendingJobs();
     return queue;
   }
