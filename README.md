@@ -55,7 +55,7 @@ app.post("/signup", async (req, res) => {
 - **CLI Dashboard** - Monitor queues right in your terminal
 - **Web Dashboard** - Next.js monitoring UI
 - **REST API** - Use from any language, not just TypeScript
-- **Zero Dependencies** - Core library has no external dependencies
+- **Dev-friendly configuration** - supports env variables and file based cofiguration
 
 ## 📦 Packages
 
@@ -65,7 +65,7 @@ app.post("/signup", async (req, res) => {
 | `@jet-queue/server`    | REST API + WebSocket server   | https://img.shields.io/npm/v/@jet-queue/server    |
 | `@jet-queue/client`    | TypeScript SDK for the server | https://img.shields.io/npm/v/@jet-queue/client    |
 | `@jet-queue/cli`       | Terminal dashboard            | https://img.shields.io/npm/v/@jet-queue/cli       |
-| `@jet-queue/dashboard` | Terminal dashboard            | https://img.shields.io/npm/v/@jet-queue/dashboard |
+| `@jet-queue/dashboard` | web dashboard                 | https://img.shields.io/npm/v/@jet-queue/dashboard |
 
 ## 🚀 Quick Start
 
@@ -152,23 +152,7 @@ flowchart TD
 
 ## 🔧 Configuration
 
-```typescript
-const queue = new JetQueue({
-  concurrency: 5,          // Max simultaneous jobs
-  maxQueuedJobs: 10000,    // Refuse when queue is full
-  autoStart: true,         // Start processing immediately
-  defaultJobOptions: {
-    priority: 'normal',
-    timeout: 30000,        // 30 seconds
-    maxAttempts: 3,        // Retry up to 3 times
-    retryOptions: {
-      strategy: 'exponential',
-      delay: 1000,         // Start at 1 second
-      maxDelay: 60000,     // Cap at 1 minute
-    },
-  },
-});
-```
+JetQueue uses a dev-friendly configuration system, check our docs for more informations
 
 ## 🛠️ Built With
 
@@ -185,6 +169,7 @@ const queue = new JetQueue({
 - [Server API Reference](./docs/server.md)
 - [Client SDK Reference](./docs/client.md)
 - [Architecture](./docs/architecture.md)
+- [Guides](./docs/guides)
 - [Examples](./examples/)
 
 ## 🤝 Contributing
