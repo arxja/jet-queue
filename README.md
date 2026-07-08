@@ -61,11 +61,11 @@ app.post("/signup", async (req, res) => {
 
 | package                | description                   | npm                                               |
 | ---------------------- | ----------------------------- | ------------------------------------------------- |
-| `@jet-queue/core`      | Core queue engine             | https://img.shields.io/npm/v/@jet-queue/core      |
-| `@jet-queue/server`    | REST API + WebSocket server   | https://img.shields.io/npm/v/@jet-queue/server    |
-| `@jet-queue/client`    | TypeScript SDK for the server | https://img.shields.io/npm/v/@jet-queue/client    |
-| `@jet-queue/cli`       | Terminal dashboard            | https://img.shields.io/npm/v/@jet-queue/cli       |
-| `@jet-queue/dashboard` | web dashboard                 | https://img.shields.io/npm/v/@jet-queue/dashboard |
+| `@jet-queue/core`      | Core queue engine             | <img src="https://img.shields.io/npm/v/@jet-queue/core" alt="npm badge" /> |
+| `@jet-queue/server`    | REST API + WebSocket server   | <img src="https://img.shields.io/npm/v/@jet-queue/server" alt="npm badge" /> |
+| `@jet-queue/client`    | TypeScript SDK for the server | <img src="https://img.shields.io/npm/v/@jet-queue/client" alt="npm badge" /> |
+| `@jet-queue/cli`       | Terminal dashboard            | <img src="https://img.shields.io/npm/v/@jet-queue/cli" alt="npm badge" /> |
+| `@jet-queue/dashboard` | web dashboard                 | <img src="https://img.shields.io/npm/v/@jet-queue/dashboard" alt="npm badge" /> |
 
 ## 🚀 Quick Start
 
@@ -128,16 +128,22 @@ client.onJobCompleted(job.id, (job) => {
 flowchart TD
     A["<b>Your Application</b><br><code>import { JetQueueClient } from '@jet-queue/client'</code>"]
 
-    B["<b>@jet-queue/server</b><br><i>Hono + Bun</i><br><br>📮 POST /api/jobs - Add jobs<br>🔍 GET /api/jobs/:id - Check status<br>🔌 WS /ws - Real-time events"]
+    B["<b>@jet-queue/server</b><br><i>Bun Server</i><br><br>📮 POST /api/jobs - Submit jobs<br>🔍 GET /api/jobs/:id - Check status<br>📊 GET /api/stats - Queue statistics<br>🔌 WS /ws - Real-time events"]
 
-    C["<b>@jet-queue/core</b><br><br>📦 JetQueue Engine<br>├── ⚡ Concurrency Control<br>├── 📊 Priority Queue<br>├── 🔄 Retry Logic<br>├── 💾 SQLite Persistence<br>└── 📡 Event System"]
+    C["<b>@jet-queue/core</b><br><br>📦 Queue Engine<br>├── 🔄 Job Lifecycle Management<br>├── ⚡ Concurrency Control<br>├── 📊 Priority Queue (4 levels)<br>├── 🔁 Retry Logic (Fixed/Linear/Exponential)<br>├── 💾 Storage Abstraction (SQLite default)<br>└── 📡 Event System"]
+
+    D["<b>SQLite Database</b><br><br>💾 Persistent Storage<br>├── Job records<br>├── Status history<br>└── Error logs"]
 
     A -->|HTTP + WebSocket| B
-    B --> C
+    B -->|Passes jobs to| C
+    C -->|Reads/Writes| D
+    C -.->|Real-time events| B
+    B -.->|WebSocket broadcasts| A
 
-    style A fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:#000
-    style B fill:#ffe0b2,stroke:#f57c00,stroke-width:2px,color:#000
-    style C fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style A fill:#2c3e50,stroke:#1a252f,stroke-width:2px,color:#ecf0f1
+    style B fill:#6c2e2e,stroke:#4a1f1f,stroke-width:2px,color:#ecf0f1
+    style C fill:#4a2c6a,stroke:#2d1a45,stroke-width:2px,color:#ecf0f1
+    style D fill:#1a4a3a,stroke:#0f3328,stroke-width:2px,color:#ecf0f1
 ```
 
 ## 📊 Use Cases
