@@ -20,6 +20,7 @@ import type { StorageAdapter } from "./types";
 import { MemoryStorage } from "./storage/memory";
 import { HandlerRegistry } from "./handlers";
 import { ConfigLoader } from "./config/loader";
+import { StorageFactory } from "./storage/factory";
 
 export class JetQueue {
   // Configuration
@@ -413,7 +414,9 @@ export class JetQueue {
   static async create(storage?: StorageAdapter): Promise<JetQueue> {
     const loader = ConfigLoader.getInstance();
     const config = await loader.load();
-    const queue = new JetQueue(config.queue, storage);
+    // Use factory if no storage override provided
+    const resolvedStorage = storage ?? await StorageFactory.create(config);
+    const queue = new JetQueue(config.queue, resolvedStorage);
     await queue.loadPendingJobs();
     return queue;
   }
