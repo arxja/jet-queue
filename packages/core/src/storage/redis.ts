@@ -14,6 +14,7 @@ export class RedisStorage implements StorageAdapter {
   private client: any; // ioredis instance
   private prefix: string;
   private connected = false;
+  private connectingPromise: Promise<void> | null = null;
 
   constructor(config: RedisConfig) {
     // Dynamic require — only loads ioredis when this adapter is used
@@ -39,8 +40,22 @@ export class RedisStorage implements StorageAdapter {
 
   private async ensureConnected(): Promise<void> {
     if (this.connected) return;
-    await this.client.connect();
-    this.connected = true;
+
+    // If already connecting, reuse the same promise
+    if (this.connectingPromise) {
+      return this.connectingPromise;
+    }
+
+    this.connectingPromise = this.client
+      .connect()
+      .then(() => {
+        this.connected = true;
+      })
+      .finally(() => {
+        this.connectingPromise = null;
+      });
+
+    return this.connectingPromise!;
   }
 
   private key(jobId: string): string {
@@ -101,16 +116,14 @@ export class RedisStorage implements StorageAdapter {
     await this.ensureConnected();
     const data = this.serialize(job);
     const jobKey = this.key(job.id);
-
-    // Store job as hash
-    await this.client.hset(jobKey, data);
-
-    // Add to status index
     const statusKey = this.indexKey(job.status);
-    await this.client.zadd(statusKey, job.createdAt, job.id);
+    const allKey = this.indexKey();
 
-    // Add to global index
-    await this.client.zadd(this.indexKey(), job.createdAt, job.id);
+    const multi = this.client.multi();
+    multi.hset(jobKey, data);
+    multi.zadd(statusKey, job.createdAt, job.id);
+    multi.zadd(allKey, job.createdAt, job.id);
+    await multi.exec();
   }
 
   async getJob(jobId: string): Promise<Job | null> {
@@ -130,15 +143,22 @@ export class RedisStorage implements StorageAdapter {
 
     const oldStatus = current.status;
     const merged = { ...current, ...updates };
+    const data = this.serialize(merged);
+    const jobKey = this.key(jobId);
 
-    // Save updated job
-    await this.saveJob(merged);
+    const multi = this.client.multi();
+    multi.hset(jobKey, data);
 
-    // If status changed, update indexes
+    // If status changed, remove from old index
     if (updates.status && updates.status !== oldStatus) {
-      const oldIndexKey = this.indexKey(oldStatus);
-      await this.client.zrem(oldIndexKey, jobId);
+      multi.zrem(this.indexKey(oldStatus), jobId);
     }
+
+    // Always re-add to new status index and global index
+    multi.zadd(this.indexKey(merged.status), merged.createdAt, jobId);
+    multi.zadd(this.indexKey(), merged.createdAt, jobId);
+
+    await multi.exec();
   }
 
   async deleteJob(jobId: string): Promise<void> {
@@ -147,12 +167,13 @@ export class RedisStorage implements StorageAdapter {
     const job = await this.getJob(jobId);
     if (!job) return;
 
-    // Remove from indexes
-    await this.client.zrem(this.indexKey(job.status), jobId);
-    await this.client.zrem(this.indexKey(), jobId);
+    const jobKey = this.key(jobId);
 
-    // Remove job data
-    await this.client.del(this.key(jobId));
+    const multi = this.client.multi();
+    multi.zrem(this.indexKey(job.status), jobId);
+    multi.zrem(this.indexKey(), jobId);
+    multi.del(jobKey);
+    await multi.exec();
   }
 
   async listJobs(status?: JobStatus): Promise<Job[]> {
@@ -179,13 +200,23 @@ export class RedisStorage implements StorageAdapter {
   async clearAll(): Promise<void> {
     await this.ensureConnected();
 
-    // Get all job keys
-    const keys = await this.client.keys(`${this.prefix}:job:*`);
-    const indexKeys = await this.client.keys(`${this.prefix}:index:*`);
+    const patterns = [`${this.prefix}:job:*`, `${this.prefix}:index:*`];
 
-    const allKeys = [...keys, ...indexKeys];
-    if (allKeys.length > 0) {
-      await this.client.del(...allKeys);
+    for (const pattern of patterns) {
+      let cursor = "0";
+      do {
+        const [nextCursor, keys] = await this.client.scan(
+          cursor,
+          "MATCH",
+          pattern,
+          "COUNT",
+          100,
+        );
+        cursor = nextCursor;
+        if (keys.length > 0) {
+          await this.client.del(...keys);
+        }
+      } while (cursor !== "0");
     }
   }
 
@@ -193,6 +224,7 @@ export class RedisStorage implements StorageAdapter {
     if (this.connected) {
       await this.client.quit();
       this.connected = false;
+      this.connectingPromise = null;
     }
   }
 }
