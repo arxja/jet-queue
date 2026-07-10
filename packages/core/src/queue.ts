@@ -313,6 +313,9 @@ export class JetQueue {
       }
     }
 
+    // Close storage adapter to release connections
+    await this.storage.close();
+
     this.logger.info("Shutdown complete");
   }
 
@@ -415,7 +418,7 @@ export class JetQueue {
     const loader = ConfigLoader.getInstance();
     const config = await loader.load();
     // Use factory if no storage override provided
-    const resolvedStorage = storage ?? await StorageFactory.create(config);
+    const resolvedStorage = storage ?? (await StorageFactory.create(config));
     const queue = new JetQueue(config.queue, resolvedStorage);
     await queue.loadPendingJobs();
     return queue;
