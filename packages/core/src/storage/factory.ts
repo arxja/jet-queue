@@ -22,9 +22,8 @@ export class StorageFactory {
       }
 
       case "redis":
-        throw new Error(
-          "Redis storage adapter is not yet implemented. Coming soon.",
-        );
+        const { RedisStorage } = await import("./redis");
+        return new RedisStorage(storageConfig.redis || {});
 
       default:
         throw new Error(

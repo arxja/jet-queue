@@ -2,6 +2,8 @@ import { describe, it, expect } from "bun:test";
 import { StorageFactory } from "../src/storage/factory";
 import { MemoryStorage } from "../src/storage/memory";
 import { SQLiteStorage } from "../src/storage/sqlite";
+import { RedisStorage } from "@/storage/redis";
+import { PostgresStorage } from "@/storage/postgres";
 
 describe("StorageFactory", () => {
   it("creates MemoryStorage for type 'memory'", async () => {
@@ -24,4 +26,24 @@ describe("StorageFactory", () => {
     ).rejects.toThrow("Unknown storage type");
   });
 
+  it("creates PostgresStorage for type 'postgres'", async () => {
+    // Mock the dynamic import or verify dispatch without a live DB
+    const adapter = await StorageFactory.create({
+      storage: {
+        type: "postgres",
+        postgres: { host: "localhost", port: 5432, database: "test" },
+      },
+    } as any);
+    expect(adapter).toBeInstanceOf(PostgresStorage);
+  });
+
+  it("creates RedisStorage for type 'redis'", async () => {
+    const adapter = await StorageFactory.create({
+      storage: {
+        type: "redis",
+        redis: { host: "localhost", port: 6379 },
+      },
+    } as any);
+    expect(adapter).toBeInstanceOf(RedisStorage);
+  });
 });
