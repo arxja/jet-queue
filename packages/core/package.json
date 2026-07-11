@@ -1,6 +1,6 @@
 {
   "name": "@jet-queue/core",
-  "version": "0.2.2",
+  "version": "0.3.2",
   "description": "High-performance job queue for Bun/Node.js applications",
   "keywords": [
     "queue",
