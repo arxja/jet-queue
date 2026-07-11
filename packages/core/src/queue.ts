@@ -5,6 +5,7 @@ import type {
   QueueState,
   QueueEvent,
   TaskFunction,
+  JobPriority,
 } from "./types";
 import {
   QueueError,
@@ -22,6 +23,8 @@ import { HandlerRegistry } from "./handlers";
 import { ConfigLoader } from "./config/loader";
 import { StorageFactory } from "./storage/factory";
 
+const PRIORITY_KEYS: JobPriority[] = ["critical", "high", "normal", "low"];
+
 export class JetQueue {
   // Configuration
   private concurrency: number;
@@ -30,7 +33,14 @@ export class JetQueue {
   private defaultJobOptions: JobOptions;
 
   // State
-  private pending: InternalJob<any>[] = [];
+  // Bucket-based priority queue: each priority level gets its own FIFO array
+  // Jobs within the same priority run in insertion order
+  private pending: Record<string, InternalJob<any>[]> = {
+    critical: [],
+    high: [],
+    normal: [],
+    low: [],
+  };
   private running: Map<string, InternalJob> = new Map();
   private delayed: Map<string, ReturnType<typeof setTimeout>> = new Map();
 
@@ -75,7 +85,7 @@ export class JetQueue {
   /**
    * Add a job to the queue
    *
-   * @param taskFn - The async function to execute
+   * @param taskOrHandler - The async function to execute, or a registered handler name
    * @param options - Job configuration (priority, retries, etc.)
    * @returns The job ID (use this to track the job)
    *
@@ -98,7 +108,7 @@ export class JetQueue {
     if (this.isShuttingDown) {
       throw new QueueError("Cannot add job during shutdown", "SHUTTING_DOWN");
     }
-    if (this.pending.length >= this.maxQueuedJobs) {
+    if (this.pendingCount >= this.maxQueuedJobs) {
       throw new QueueFullError(this.maxQueuedJobs);
     }
 
@@ -158,7 +168,7 @@ export class JetQueue {
       job.status = "delayed";
       this.scheduleDelayedJob(job);
     } else {
-      // Add to pending queue (sorted by priority)
+      // Add to the appropriate priority bucket (O(1) operation)
       this.enqueueByPriority(job);
     }
 
@@ -254,15 +264,18 @@ export class JetQueue {
 
   /**
    * Get a specific job by ID
+   * Searches running jobs first, then all priority buckets
    */
   getJob(jobId: string): Job | null {
     // Check running
     const running = this.running.get(jobId);
     if (running) return running;
 
-    // Check pending
-    const pending = this.pending.find((j) => j.id === jobId);
-    if (pending) return pending;
+    // Check pending buckets (iterate in priority order)
+    for (const priority of PRIORITY_KEYS) {
+      const job = this.pending[priority].find((j) => j.id === jobId);
+      if (job) return job;
+    }
 
     return null;
   }
@@ -286,6 +299,7 @@ export class JetQueue {
    * - Stop accepting new jobs
    * - Wait for running jobs to finish (with timeout)
    * - Clear delayed jobs
+   * - Close storage connection
    */
   async shutdown(gracePeriodMs = 5000): Promise<void> {
     this.isShuttingDown = true;
@@ -321,16 +335,19 @@ export class JetQueue {
 
   /**
    * Cancel a pending or delayed job
+   * Searches all priority buckets and the delayed map
    */
   cancel(jobId: string): boolean {
-    // Check pending
-    const index = this.pending.findIndex((j) => j.id === jobId);
-    if (index !== -1) {
-      const job = this.pending[index];
-      this.pending.splice(index, 1);
-      job.status = "cancelled";
-      // ! this.events.emit('job:completed', { job, result: null, duration: 0 });
-      return true;
+    // Check pending buckets (iterate in priority order)
+    for (const priority of PRIORITY_KEYS) {
+      const bucket = this.pending[priority];
+      const index = bucket.findIndex((j) => j.id === jobId);
+      if (index !== -1) {
+        const job = bucket[index];
+        bucket.splice(index, 1);
+        job.status = "cancelled";
+        return true;
+      }
     }
 
     // Check delayed
@@ -366,7 +383,7 @@ export class JetQueue {
     job.completedAt = undefined;
     job.progress = 0;
 
-    // Re-add to pending queue
+    // Re-add to the appropriate priority bucket
     this.enqueueByPriority(job as InternalJob);
 
     // Update storage
@@ -392,13 +409,13 @@ export class JetQueue {
    */
   getState(): QueueState {
     return {
-      pending: this.pending.length,
+      pending: this.pendingCount,
       running: this.running.size,
       completed: this.completedCount,
       failed: this.failedCount,
       delayed: this.delayed.size,
       total:
-        this.pending.length +
+        this.pendingCount +
         this.running.size +
         this.completedCount +
         this.failedCount +
@@ -414,6 +431,9 @@ export class JetQueue {
     this.handlers.register(name, fn);
   }
 
+  /**
+   * Static factory method — loads config, creates storage via factory, restores pending jobs
+   */
   static async create(storage?: StorageAdapter): Promise<JetQueue> {
     const loader = ConfigLoader.getInstance();
     const config = await loader.load();
@@ -427,29 +447,46 @@ export class JetQueue {
   // INTERNAL: JOB MANAGEMENT
 
   /**
-   * Insert job into pending queue at correct priority position
+   * Insert job into the correct priority bucket (O(1))
    *
-   * Priority queue works like a hospital ER (at least it should be like this):
+   * Priority buckets work like a hospital ER:
    * - Critical patients (critical) seen first
    * - Then serious cases (high)
    * - Then regular checkups (normal)
    * - Then paperwork (low)
    *
-   * find where the new job belongs and insert it there.
+   * Within each bucket, jobs run in FIFO order (first in, first out).
    */
   private enqueueByPriority<T>(job: InternalJob<T>): void {
-    const insertIndex = this.pending.findIndex(
-      (existing) =>
-        PRIORITY_ORDER[job.priority] < PRIORITY_ORDER[existing.priority],
-    );
+    this.pending[job.priority].push(job);
+  }
 
-    if (insertIndex === -1) {
-      // Lowest priority so far, add to end
-      this.pending.push(job);
-    } else {
-      // Insert at the right position
-      this.pending.splice(insertIndex, 0, job);
+  /**
+   * Pull the next highest-priority job from the buckets (O(1))
+   *
+   * Iterates buckets in priority order: critical → high → normal → low.
+   * Returns the first job from the first non-empty bucket (FIFO within priority).
+   */
+  private dequeueNext(): InternalJob | undefined {
+    for (const priority of PRIORITY_KEYS) {
+      const bucket = this.pending[priority];
+      if (bucket.length > 0) {
+        return bucket.shift()!;
+      }
     }
+    return undefined;
+  }
+
+  /**
+   * Total number of jobs across all priority buckets
+   */
+  private get pendingCount(): number {
+    return (
+      this.pending.critical.length +
+      this.pending.high.length +
+      this.pending.normal.length +
+      this.pending.low.length
+    );
   }
 
   /**
@@ -484,8 +521,8 @@ export class JetQueue {
       return;
     }
 
-    while (this.running.size < this.concurrency && this.pending.length > 0) {
-      const job = this.pending.shift();
+    while (this.running.size < this.concurrency && this.pendingCount > 0) {
+      const job = this.dequeueNext();
       if (job && job.status !== "cancelled") {
         this.executeJob(job);
       }
@@ -493,7 +530,7 @@ export class JetQueue {
 
     // Emit drain event if everything is done
     if (
-      this.pending.length === 0 &&
+      this.pendingCount === 0 &&
       this.running.size === 0 &&
       this.delayed.size === 0
     ) {
@@ -587,7 +624,7 @@ export class JetQueue {
       // FAILURE
       this.handleJobFailure(job, error as Error);
     } finally {
-      // Clean up - job is no longer running (can be deleted here or be canceled)
+      // Clean up - job is no longer running
       this.running.delete(job.id);
 
       // Process next job if any
@@ -676,6 +713,10 @@ export class JetQueue {
     }
   }
 
+  /**
+   * Load pending and delayed jobs from storage on startup.
+   * Only restores jobs that have a registered handler.
+   */
   private async loadPendingJobs(): Promise<void> {
     const pending = await this.storage.listJobs("pending");
     const delayed = await this.storage.listJobs("delayed");
@@ -710,6 +751,9 @@ export class JetQueue {
     this.processNext();
   }
 
+  /**
+   * Restore a stored job into an InternalJob that the queue can process
+   */
   private restoreJob(data: Job): InternalJob {
     return {
       ...data,
