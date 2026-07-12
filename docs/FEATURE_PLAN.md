@@ -1,8 +1,7 @@
 # JetQueue - Feature plan
 
 > [!NOTE]
-> The phase one of the features is coming soon.
-> Features in other phase of updates might change
+> The phase one of the new features is out, you can use it in you projects. And we are planing to start phase 2 ASAP
 
 ## Phase one
 
