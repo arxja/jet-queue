@@ -132,7 +132,7 @@ flowchart TD
 
     C["<b>@jet-queue/core</b><br><br>📦 Queue Engine<br>├── 🔄 Job Lifecycle Management<br>├── ⚡ Concurrency Control<br>├── 📊 Priority Queue (4 levels)<br>├── 🔁 Retry Logic (Fixed/Linear/Exponential)<br>├── 💾 Storage Abstraction (SQLite default)<br>└── 📡 Event System"]
 
-    D["<b>SQLite Database</b><br><br>💾 Persistent Storage<br>├── Job records<br>├── Status history<br>└── Error logs"]
+    D["<b>Database</b><br><br>💾 Persistent Storage<br>├── Job records<br>├── Status history<br>└── Error logs"]
 
     A -->|HTTP + WebSocket| B
     B -->|Passes jobs to| C
