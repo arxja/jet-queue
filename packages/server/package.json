@@ -1,6 +1,6 @@
 {
   "name": "@jet-queue/server",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "JetQueue's ready to use server",
   "main": "dist/index.js",
   "type": "module",
