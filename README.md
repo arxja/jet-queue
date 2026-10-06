@@ -11,10 +11,18 @@
     <img src="https://img.shields.io/badge/Bun-000000?style=flat&logo=bun&logoColor=white" alt="Bun" />
     <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=nodedotjs&logoColor=white" alt="Node.js" />
     <img src="https://img.shields.io/badge/SQLite-003B57?style=flat&logo=sqlite&logoColor=white" alt="SQLite" />
+    <img src="https://img.shields.io/badge/Redis-FF4438?style=flat&logo=redis&logoColor=white" alt="Redis" />
+    <img src="https://img.shields.io/badge/postgresSQL-0064a5?style=flat&logo=postgresql&logoColor=white" alt="Postgres" />
   </p>
 </div>
 
 ---
+
+>[!IMPORTANT]
+>This project is an **Education and experimental Artifact** and it's NOT suitable choice for production usecases
+
+---
+
 
 ## 🤔 What is JetQueue?
 
